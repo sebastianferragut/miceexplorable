@@ -6,6 +6,9 @@ let maleTempData = [];
 let femaleActData = [];
 let maleActData = [];
 
+// Select summary-tooltip
+const summaryTooltip = d3.select("#summary-tooltip");
+
 const times = d3.range(1440).map(i => new Date(2023, 0, 1, 0, i));
 const LIGHTS_OFF_COLOR = "rgba(0, 0, 0, 0.1)";
 
@@ -112,10 +115,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     femaleActData = await loadActivityData("fem_act.csv", femaleLabel);
 
     // DEBUG statements 
-    console.log("maleTempData", maleTempData);
-    console.log("femaleTempData", femaleTempData);
-    // console.log("maleActData", maleActData);
-    // console.log("femaleActData", femaleActData);
+    // console.log("maleTempData", maleTempData);
+    // console.log("femaleTempData", femaleTempData);
+    console.log("maleActData", maleActData);
+    console.log("femaleActData", femaleActData);
 
 
     // Create general chart 
@@ -233,7 +236,7 @@ function summaryChart(chartType) {
         data = [...maleAvgTempData, ...femaleAvgTempData];
         yLabel = "Temperature (°C)";
         yScale = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d3.max(d.data))])
+            .domain([34, d3.max(data, d => d3.max(d.data))])
             .range([height, 0]);
     } else if (chartType === "act") {
         data = [...maleAvgActData, ...femaleAvgActData];
@@ -256,7 +259,6 @@ function summaryChart(chartType) {
         .attr("text-anchor", "middle")
         .text(yLabel);
 
-    // Create a line generator using our precomputed time array.
     const lineGenerator = d3.line()
         .x((d, i) => xScale(times[i]))
         .y(d => yScale(d))
@@ -267,11 +269,14 @@ function summaryChart(chartType) {
         .data(data)
         .enter()
         .append("path")
-        .attr("class", "mouse-line")
-        .attr("clip-path", "url(#clip)")
-        .attr("fill", "none")
-        .attr("stroke-width", 1.5)
-        .attr("opacity", 0.7)
+            .attr("class", "mouse-line")
+            .attr("clip-path", "url(#clip)")
+            .attr("fill", "none")
+            .attr("stroke-width", 1.5)
+            .attr("opacity", 0.7)
+            .on("mouseover", showSummaryTooltip)
+            .on("mousemove", moveSummaryTooltip)
+            .on("mouseleave", hideSummaryTooltip)
         .attr("d", d => lineGenerator(d.data))
         .attr("stroke", d => d.id.startsWith("m") ? "blue" : "pink");
 }
@@ -291,12 +296,66 @@ function femaleChart() {
     // NEEDS WORK
 }
 
-// Manages tooltip content
-function updateTooltipContent() {
+function showSummaryTooltip(event, mouse) {
+    const hoveredId = mouse.id;
+    d3.selectAll(".mouse-line")
+      .filter(d => d.id === hoveredId)
+      .attr("opacity", 1)
+      .attr("stroke-width", 2.5);
+    d3.selectAll(".mouse-line")
+      .filter(d => d.id !== hoveredId)
+      .attr("opacity", 0.1);
 
+    const gender = hoveredId.startsWith("m") ? "Male" : "Female";
+
+    d3.select("#summary-tooltip-id").text(hoveredId);
+    d3.select("#summary-tooltip-gender").text(gender);
+
+    summaryTooltip
+      .style("display", "block")
+      .style("opacity", .80)
+      .style("left", `${event.pageX + 15}px`)
+      .style("top", `${event.pageY - 15}px`);
+}
+  
+function moveSummaryTooltip(event) {
+    summaryTooltip.style("left", `${event.pageX + 15}px`)
+            .style("top", `${event.pageY - 15}px`);
 }
 
-// Manages tooltip visibility and position 
-function updateTooltipVisibility() {
-
+function hideSummaryTooltip() {
+    d3.selectAll(".mouse-line")
+        .attr("opacity", 0.7)
+        .attr("stroke-width", 1.5);
+    summaryTooltip.style("opacity", 0);
 }
+
+
+// TODO
+
+// function showMaleTooltip(event, mouse) {
+    
+// }
+  
+// function moveMaleTooltip(event) {
+    
+// }
+
+// function hideMaleTooltip() {
+   
+// }
+
+// function showFemaleTooltip(event, mouse) {
+    
+// }
+  
+// function moveFemaleTooltip(event) {
+    
+// }
+
+// function hideFemaleTooltip() {
+   
+// }
+
+
+

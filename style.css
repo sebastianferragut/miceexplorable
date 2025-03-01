@@ -11,9 +11,22 @@ h1 {
     color: #333;
 }
 
+/* Add styling for p elements*/
+p {
+    /* Add a margin  */
+    margin: 10px 0;
+    /* Add a padding */
+    padding: 0 150px;
+    color: #333;
+    
+    
+
+}
+
 #summary-chart {
     width: 80%;
-    height: 100%;
+    max-width: 850px;
+    height: 450px;
     margin: 20px auto;
     background-color: #fff;
     border: 1px solid #ddd;
@@ -22,16 +35,14 @@ h1 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.button-container {
-    display: grid;
-    grid-column: 1 / -1;
+#button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
 }
 
 button {
-    display: grid;
-    grid-column: 1 / -1;
-    
-    margin: 10px auto;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -53,10 +64,14 @@ button:hover {
     border-radius: 5px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+    /* Font size */
+    font-size: 12px;
 }
 
 #summary-tooltip dt {
     font-weight: bold;
+    margin: 0 0 5px 0;
 }
 
 #summary-tooltip dd {
