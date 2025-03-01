@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="main.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>Mice Scrollytelling</title>
+</head>
+<body>
+    <h1>Of Mice and Medicine: The Impact of Biological Sex on Body Temperature and Activity
+    </h1>
+    <!-- Div for a general graph-->
+    <div id="summary-chart"></div>
+    <!-- Create div for tooltips for summary-chart -->
+    <dl id="summary-tooltip">
+        <dt>Date</dt>
+        <dt id="summary-tooltip-date"></dt>
+
+        <dt>Temp</dt>
+        <dd id="summary-tooltip-temp"></dd>
+
+        <dt>Activity</dt>
+        <dd id="summary-tooltip-activity"></dd>
+
+        <dt>Gender</dt>
+        <dd id="summary-tooltip-gender"></dd>
+    </dl>
+
+    <!-- Add some text for annotation/explanation -->
+    <p id="summary-annotation">This graph shows the average body temperature and activity levels. PLACEHOLDER TEXT</p>
+        
+    <!-- Divs for scroll container with comparative gender graphs -->
+    <div id="scroll-container">
+        <div id="scroller">
+            <div id ="spacer"></div>
+            <div id="scroll-text"></div>
+        </div>
+        <div id="male-chart"></div>
+        <div id="female-chart"></div>
+    </div>
+
+    <!-- Create div for tooltips for charts -->
+    <dl id="male-tooltip">
+        <dt>Date</dt>
+        <dt id="male-tooltip-date"></dt>
+
+        <dt>Temp</dt>
+        <dd id="male-tooltip-temp"></dd>
+
+        <dt>Activity</dt>
+        <dd id="male-tooltip-activity"></dd>
+    </dl>
+    <dl id="female-tooltip">
+        <dt>Date</dt>
+        <dt id="female-tooltip-date"></dt>
+
+        <dt>Temp</dt>
+        <dd id="female-tooltip-temp"></dd>
+
+        <dt>Activity</dt>
+        <dd id="female-tooltip-activity"></dd>
+
+        <dt>Estrus</dt>
+        <dd id="female-tooltip-estrus"></dd>
+    </dl>
+
+    <!-- Add some text for annotation/explanation -->
+    <p id="scroll-annotation">These graphs allow for comparison of female and male mice over time. PLACEHOLDER TEXT.</p>
+
+</body>
+</html>
