@@ -11,16 +11,10 @@ h1 {
     color: #333;
 }
 
-/* Add styling for p elements*/
 p {
-    /* Add a margin  */
     margin: 10px 0;
-    /* Add a padding */
     padding: 0 150px;
     color: #333;
-    
-    
-
 }
 
 #summary-chart {
@@ -56,8 +50,57 @@ button:hover {
     background-color: #0056b3;
 }
 
+.legend {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background: #f8f8f8;
+    border-radius: 4px;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9rem;
+    align-items: flex-start;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.reset-container {
+    text-align: center;
+    margin: 10px 0;
+}
+
+#resetBrush {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 12px;
+}
+
+#resetBrush:hover {
+    background-color: #45a049;
+}
+
 #summary-tooltip {
-    display: none;
     position: absolute;
     background-color: white;
     border: 1px solid #ddd;
@@ -65,8 +108,9 @@ button:hover {
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     pointer-events: none;
-    /* Font size */
     font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
 #summary-tooltip dt {
@@ -78,8 +122,17 @@ button:hover {
     margin: 0 0 10px 0;
 }
 
-#piechart{
+#piechart {
     display: flex;
     justify-content: center;
     margin: auto;
+}
+
+.light-legend text {
+    font-size: 12px;
+    dominant-baseline: middle;
+}
+
+.light-legend rect {
+    stroke-width: 1px;
 }
