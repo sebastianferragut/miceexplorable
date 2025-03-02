@@ -77,3 +77,9 @@ button:hover {
 #summary-tooltip dd {
     margin: 0 0 10px 0;
 }
+
+#piechart{
+    display: flex;
+    justify-content: center;
+    margin: auto;
+}
