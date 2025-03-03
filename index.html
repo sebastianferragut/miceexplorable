@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script type="module" src="main.js"></script>
+    <script type = "module" src="scrollstory.js"></script>
     <script type = "module" src="piechart.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <title>Mice Scrollytelling</title>
@@ -35,15 +36,38 @@
     <p id="summary-annotation">This graph shows the average body temperature and activity levels. PLACEHOLDER TEXT</p>
 
     <div id="piechart"></div>
-        
+    
+    <!-- TEMPORARY MOUSE ID SELECTOR -->
+    <div id="mouse-selector">
+        <label for="mouse-dropdown">Select a Mouse ID to explore the study:</label>
+        <select id="mouse-dropdown">
+            <option value="1">Mice ID 1</option>
+            <option value="2">Mice ID 2</option>
+            <option value="3">Mice ID 3</option>
+            <option value="4">Mice ID 4</option>
+            <option value="5">Mice ID 5</option>
+            <option value="6">Mice ID 6</option>
+            <option value="7">Mice ID 7</option>
+            <option value="8">Mice ID 8</option>
+            <option value="9">Mice ID 9</option>
+            <option value="10">Mice ID 10</option>
+            <option value="11">Mice ID 11</option>
+            <option value="12">Mice ID 12</option>
+            <option value="13">Mice ID 13</option>
+        </select>
+    </div>
+
     <!-- Divs for scroll container with comparative gender graphs -->
+    <div id="scroll-indicator"></div>
     <div id="scroll-container">
         <div id="scroller">
-            <div id ="spacer"></div>
+            <div id="spacer"></div>
             <div id="scroll-text"></div>
         </div>
-        <div id="male-chart"></div>
-        <div id="female-chart"></div>
+        <div id = "chart-container">
+            <div id="temp-chart"></div>
+            <div id="act-chart"></div>
+        </div>
     </div>
 
     <!-- Create div for tooltips for charts -->
