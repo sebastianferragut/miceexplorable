@@ -33,18 +33,6 @@ const customTimeFormat = d => {
     return d3.timeFormat("%-I %p")(d);
 };
 
-// Plot vars
-let maleXScale;
-let femaleXScale;
-
-// Filtering vars for scroll 
-let filteredMaleData;
-let filteredFemaleData;
-
-// Scroller vars
-let ITEM_HEIGHT = 120; // Height of each item in the scroll plot
-const scrollItems = d3.select("#scroll-text");
-
 // Processing functions 
 
 // Fetch data
@@ -135,41 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     actButton.on("click", () => {
         summaryChart("act");
     });
-
-
-    // Create scroll and two graphs 
-    updateScrollPlots();
-    // Create scroll handling event 
-    const scrollContainer = d3.select("#scroll-container");
-    const spacer = d3.select("#spacer");
-     
-    let NUM_ITEMS = 14;
-    let totalHeight = (NUM_ITEMS -1) * ITEM_HEIGHT;
-
-    // Set the height of the spacer to create the illusion of scrollable content
-    spacer.style("height", `${totalHeight}px`);
-
-
-    // NEEDS WORK 
-
-    // Create scroll text items
-    let scrollDays = []; // should separate data into each day 
-
-    // Initial render of scroll text 
-    scrollItems.selectAll("div")
-        .data(scrollDays) // data should be separated by day
-        .enter()
-        .append("div")
-        .html((scrollDay, index) => `
-            <p>
-                On ${scrollDay} of the study, the female mice were active for __, with an average temperature of __.
-                The male mice were active for __, with an average temperature of __. 
-            </p>
-        `)
-        .style('position', 'absolute')
-        .style('top', (_, i) => `${i * ITEM_HEIGHT}px`);
 });
-
 
 // Visualization functions 
 
@@ -281,21 +235,6 @@ function summaryChart(chartType) {
         .attr("stroke", d => d.id.startsWith("m") ? "blue" : "pink");
 }
 
-// Updates scroll graphs
-function updateScrollPlots() {
-    // NEEDS WORK, should call maleChart and femaleChart at some point 
-}
-
-// Manages male scroll plot
-function maleChart() {
-    // NEEDS WORK
-}
-
-// Manages female scroll plot
-function femaleChart() {
-    // NEEDS WORK
-}
-
 function showSummaryTooltip(event, mouse) {
     const hoveredId = mouse.id;
     d3.selectAll(".mouse-line")
@@ -330,32 +269,6 @@ function hideSummaryTooltip() {
     summaryTooltip.style("opacity", 0);
 }
 
-
-// TODO
-
-// function showMaleTooltip(event, mouse) {
-    
-// }
-  
-// function moveMaleTooltip(event) {
-    
-// }
-
-// function hideMaleTooltip() {
-   
-// }
-
-// function showFemaleTooltip(event, mouse) {
-    
-// }
-  
-// function moveFemaleTooltip(event) {
-    
-// }
-
-// function hideFemaleTooltip() {
-   
-// }
 
 
 
