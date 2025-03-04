@@ -87,7 +87,6 @@ function processMiceData(dataset) {
     return groupedData;
 }
 
-
 // Main handler 
 document.addEventListener("DOMContentLoaded", async () => {
     // Load data
@@ -98,7 +97,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     femaleTempData = await loadTemperatureData("fem_temp.csv", femaleLabel);
     maleActData = await loadActivityData("male_act.csv", maleLabel);
     femaleActData = await loadActivityData("fem_act.csv", femaleLabel);
-
 
     maleTempData = processMiceData(maleTempData);
     femaleTempData = processMiceData(femaleTempData);
@@ -183,14 +181,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     scrollContainer.on("scroll", () => {
         // Get current scroll position
         const scrollTop = scrollContainer.property("scrollTop");
-        
-        console.log("scrollTop", scrollTop);
 
         let scrolledCommits = Math.floor(scrollTop / (ITEM_HEIGHT-10));
         scrolledCommits = 2 + scrolledCommits;
 
         let sliceEndIndex = scrolledCommits;
-        console.log("sliceEndIndex", sliceEndIndex);
         
         if (scrollTop > 1190) {
             sliceEndIndex = sliceEndIndex + 1;
