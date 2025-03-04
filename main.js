@@ -102,13 +102,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     maleActData = await loadActivityData("male_act.csv", maleLabel);
     femaleActData = await loadActivityData("fem_act.csv", femaleLabel);
 
-    // DEBUG statements 
-    // console.log("maleTempData", maleTempData);
-    // console.log("femaleTempData", femaleTempData);
-    console.log("maleActData", maleActData);
-    console.log("femaleActData", femaleActData);
-
-
     // Create general chart 
     summaryChart("temp"); 
      
