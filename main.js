@@ -102,6 +102,19 @@ function processMiceData(dataset) {
     return avgData.slice(1);
 }
 
+// Function to produce one line per sex
+function averageTimeSeries(data, id) {
+    let numPoints = data[0].data.length;
+    let avgSeries = Array(numPoints).fill(0);
+
+    data.forEach(series => {
+        series.data.forEach((value, i) => {
+            avgSeries[i] += value;
+        });
+    });
+
+    return { id, data: avgSeries.map(sum => sum / data.length) };
+}
 
 // Main handler 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -145,6 +158,11 @@ function summaryChart(chartType) {
     let maleAvgActDataSmooth = smoothData(maleAvgActData, 30);
     let femaleAvgTempDataSmooth = smoothData(femaleAvgTempData, 30);
     let femaleAvgActDataSmooth = smoothData(femaleAvgActData, 30);
+
+    let maleTempOneLine = averageTimeSeries(maleAvgTempDataSmooth, "m_avg");
+    let maleActOneLine = averageTimeSeries(maleAvgActDataSmooth, "m_avg");
+    let femaleTempOneLine = averageTimeSeries(femaleAvgTempDataSmooth, "f_avg");
+    let femaleActOneLine = averageTimeSeries(femaleAvgActDataSmooth, "f_avg");
 
     const margin = { top: 20, right: 30, bottom: 50, left: 50 };
     const containerWidth = 800;
@@ -198,13 +216,13 @@ function summaryChart(chartType) {
     // Conditional for loading data based on button input 
     let data, yLabel;
     if (chartType === "temp") {
-        data = [...maleAvgTempDataSmooth, ...femaleAvgTempDataSmooth];
+        data = [maleTempOneLine, femaleTempOneLine];
         yLabel = "Temperature (°C)";
         yScale = d3.scaleLinear()
             .domain([34, d3.max(data, d => d3.max(d.data))])
             .range([height, 0]);
     } else if (chartType === "act") {
-        data = [...maleAvgActDataSmooth, ...femaleAvgActDataSmooth];
+        data = [maleActOneLine, femaleActOneLine];
         yLabel = "Activity";
         yScale = d3.scaleLinear()
             .domain([0, d3.max(data, d => d3.max(d.data))])
@@ -279,7 +297,3 @@ function hideSummaryTooltip() {
         .attr("stroke-width", 1.5);
     summaryTooltip.style("opacity", 0);
 }
-
-
-
-
