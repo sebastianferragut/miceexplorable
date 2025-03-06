@@ -67,6 +67,18 @@ async function loadActivityData(filename, label) {
     return data;
 }
 
+// Smooth mice data over window_size minutes
+function smoothData(dataArray, window_size) {
+    return dataArray.map(entry => ({
+        id: entry.id,
+        data: entry.data.map((_, i, arr) => {
+            const start = Math.max(0, i - Math.floor(window_size / 2));
+            const end = Math.min(arr.length, i + Math.floor(window_size / 2) + 1);
+            return d3.mean(arr.slice(start, end));
+        })
+    }));
+}
+
 // Process mice data into average of the 14 days collapsed into 1 day
 function processMiceData(dataset) {
     const miceIDs = Object.keys(dataset[0]).filter(k => k !== "minuteIndex");
@@ -128,6 +140,12 @@ function summaryChart(chartType) {
     let femaleAvgTempData = processMiceData(femaleTempData);
     let femaleAvgActData = processMiceData(femaleActData);
 
+    // Smoothe data for line plot
+    let maleAvgTempDataSmooth = smoothData(maleAvgTempData, 30);
+    let maleAvgActDataSmooth = smoothData(maleAvgActData, 30);
+    let femaleAvgTempDataSmooth = smoothData(femaleAvgTempData, 30);
+    let femaleAvgActDataSmooth = smoothData(femaleAvgActData, 30);
+
     const margin = { top: 20, right: 30, bottom: 50, left: 50 };
     const containerWidth = 800;
     const containerHeight = 450;
@@ -180,13 +198,13 @@ function summaryChart(chartType) {
     // Conditional for loading data based on button input 
     let data, yLabel;
     if (chartType === "temp") {
-        data = [...maleAvgTempData, ...femaleAvgTempData];
+        data = [...maleAvgTempDataSmooth, ...femaleAvgTempDataSmooth];
         yLabel = "Temperature (°C)";
         yScale = d3.scaleLinear()
             .domain([34, d3.max(data, d => d3.max(d.data))])
             .range([height, 0]);
     } else if (chartType === "act") {
-        data = [...maleAvgActData, ...femaleAvgActData];
+        data = [...maleAvgActDataSmooth, ...femaleAvgActDataSmooth];
         yLabel = "Activity";
         yScale = d3.scaleLinear()
             .domain([0, d3.max(data, d => d3.max(d.data))])
