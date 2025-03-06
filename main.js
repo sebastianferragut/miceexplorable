@@ -128,7 +128,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     femaleActData = await loadActivityData("fem_act.csv", femaleLabel);
 
     // Create general chart 
-    summaryChart("temp"); 
+    let currentChart = "temp"
+    summaryChart(currentChart); 
      
     // Handle button behavior for summaryChart 
     let tempButton = d3.select("#temp-button");
@@ -136,17 +137,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Create event listeners for buttons
     tempButton.on("click", () => {
-        summaryChart("temp");
+        currentChart = "temp";
+        summaryChart(currentChart);
     });
     actButton.on("click", () => {
-        summaryChart("act");
+        currentChart = "act";
+        summaryChart(currentChart);
     });
+});
+
+// Event listeners for checkboxes
+document.getElementById("toggleFemale").addEventListener("change", function() {
+    summaryChart("temp");
+});
+
+document.getElementById("toggleMale").addEventListener("change", function() {
+    summaryChart("temp");
 });
 
 // Visualization functions 
 
 // Creates general chart for all data
 function summaryChart(chartType) {
+    const showFemale = document.getElementById("toggleFemale").checked;
+    const showMale = document.getElementById("toggleMale").checked;
+
     // Process data into 14 days  
     let maleAvgTempData = processMiceData(maleTempData);
     let maleAvgActData = processMiceData(maleActData);
@@ -217,12 +232,16 @@ function summaryChart(chartType) {
     let data, yLabel;
     if (chartType === "temp") {
         data = [maleTempOneLine, femaleTempOneLine];
+        if (showMale) data.push(...maleAvgTempDataSmooth);
+        if (showFemale) data.push(...femaleAvgTempDataSmooth);
         yLabel = "Temperature (°C)";
         yScale = d3.scaleLinear()
             .domain([34, d3.max(data, d => d3.max(d.data))])
             .range([height, 0]);
     } else if (chartType === "act") {
         data = [maleActOneLine, femaleActOneLine];
+        if (showMale) data.push(...maleAvgActDataSmooth);
+        if (showFemale) data.push(...femaleAvgActDataSmooth);
         yLabel = "Activity";
         yScale = d3.scaleLinear()
             .domain([0, d3.max(data, d => d3.max(d.data))])
