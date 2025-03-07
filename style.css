@@ -20,6 +20,10 @@ p {
     color: #333;
 }
 
+#summary-annotation {
+    text-align: center;
+}
+
 #summary-chart {
     width: 80%;
     max-width: 850px;

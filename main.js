@@ -266,6 +266,13 @@ function summaryChart(chartType) {
         .y(d => yScale(d))
         .curve(d3.curveMonotoneX);
 
+    const colorMapping = {
+        "maleTrend": "#1f78b4",
+        "femaleTrend": "#f06c82",
+        "maleSmooth": "#a6cee3",
+        "femaleSmooth": "#fac1c0"
+    };
+
     // Draw lines
     svg.selectAll(".mouse-line")
         .data(data)
@@ -280,7 +287,13 @@ function summaryChart(chartType) {
             .on("mousemove", moveSummaryTooltip)
             .on("mouseleave", hideSummaryTooltip)
         .attr("d", d => lineGenerator(d.data))
-        .attr("stroke", d => d.id.startsWith("m") ? "#97bbf5" : "#ff9da7");
+        .attr("stroke", d => {
+            if (d === maleTempOneLine || d === maleActOneLine) return colorMapping["maleTrend"];
+            if (d === femaleTempOneLine || d === femaleActOneLine) return colorMapping["femaleTrend"];
+            if (maleAvgTempDataSmooth.includes(d) || maleAvgActDataSmooth.includes(d)) return colorMapping["maleSmooth"];
+            if (femaleAvgTempDataSmooth.includes(d) || femaleAvgActDataSmooth.includes(d)) return colorMapping["femaleSmooth"];
+            return "black";
+        });
 }
 
 function showSummaryTooltip(event, mouse) {
