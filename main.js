@@ -116,6 +116,7 @@ function averageTimeSeries(data, id) {
     return { id, data: avgSeries.map(sum => sum / data.length) };
 }
 
+let currentChart = "temp"
 // Main handler 
 document.addEventListener("DOMContentLoaded", async () => {
     // Load data
@@ -128,7 +129,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     femaleActData = await loadActivityData("fem_act.csv", femaleLabel);
 
     // Create general chart 
-    let currentChart = "temp"
     summaryChart(currentChart); 
      
     // Handle button behavior for summaryChart 
@@ -148,11 +148,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Event listeners for checkboxes
 document.getElementById("toggleFemale").addEventListener("change", function() {
-    summaryChart("temp");
+    summaryChart(currentChart);
 });
 
 document.getElementById("toggleMale").addEventListener("change", function() {
-    summaryChart("temp");
+    summaryChart(currentChart);
 });
 
 // Visualization functions 
