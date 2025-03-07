@@ -280,7 +280,7 @@ function summaryChart(chartType) {
             .on("mousemove", moveSummaryTooltip)
             .on("mouseleave", hideSummaryTooltip)
         .attr("d", d => lineGenerator(d.data))
-        .attr("stroke", d => d.id.startsWith("m") ? "blue" : "pink");
+        .attr("stroke", d => d.id.startsWith("m") ? "#97bbf5" : "#ff9da7");
 }
 
 function showSummaryTooltip(event, mouse) {
