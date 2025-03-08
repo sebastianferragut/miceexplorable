@@ -4,23 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <!-- The advanced chart uses D3 v7 via our main.js module -->
     <script type="module" src="main.js"></script>
-    <script type = "module" src="scrollstory.js"></script>
-    <script type = "module" src="piechart.js"></script>
+    <script type="module" src="scrollstory.js"></script>
+    <script type="module" src="piechart.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <title>Mice Scrollytelling</title>
 </head>
 <body>
-    <h1>Of Mice and Medicine: The Impact of Biological Sex on Body Temperature and Activity
-    </h1>
-    <!-- Div for a general graph-->
+    <h1>Of Mice and Medicine: The Impact of Biological Sex on Body Temperature and Activity</h1>
     
-    <div id="summary-chart"></div>
+    <!-- Advanced temperature chart inserted here -->
+    <div id="advanced-chart"></div>
 
-    <!-- Checkboxes to select male or female data -->
-    <div id="button-container">
-        <label><input type="checkbox" id="toggleFemale">Show All Female Data</label>
-        <label><input type="checkbox" id="toggleMale"> Show All Male Data</label>
+    <!-- Advanced Chart Controls -->
+    <div id="advanced-controls">
+        <div id="advanced-legend">
+            <label class="legend-item">
+                <input type="checkbox" id="maleCheckbox" checked>
+                <span class="legend-color" style="background-color: #3690c0;"></span>
+                Males
+            </label>
+            <label class="legend-item">
+                <input type="checkbox" id="estrusCheckbox" checked>
+                <span class="legend-color" style="background-color: #ff0000;"></span>
+                Females (Estrus)
+            </label>
+            <label class="legend-item">
+                <input type="checkbox" id="nonEstrusCheckbox" checked>
+                <span class="legend-color" style="background-color: #ffa500;"></span>
+                Females (Non‑Estrus)
+            </label>
+        </div>
+        <div id="reset-container">
+            <button id="resetBrush">Reset Scope</button>
+        </div>
     </div>
 
     <!-- Buttons to select either temperature or activity data -->
@@ -33,13 +51,12 @@
     <dl id="summary-tooltip">
         <dt>Mouse ID</dt>
         <dd id="summary-tooltip-id"></dd>
-
         <dt>Gender</dt>
         <dd id="summary-tooltip-gender"></dd>
     </dl>
 
-    <!-- Add some text for annotation/explanation -->
-    <p id="summary-annotation">Daily core body temperature and activity levels of mice, recorded over 14 days and smoothed over 30-minute intervals.<br>Dark pink and dark blue represent average measurements across subjected for female and male mice, respectively.<br>Light pink and light blue represent individual average measurements for female and male mice, respectively.</p>
+    <!-- Annotation text -->
+    <p id="summary-annotation">Daily core body temperature and activity levels of mice, recorded over 14 days and smoothed over 30-minute intervals.<br>Dark pink and dark blue represent average measurements across subjects for female and male mice, respectively.<br>Light pink and light blue represent individual average measurements for female and male mice, respectively.</p>
 
     <div id="piechart"></div>
     
@@ -70,41 +87,10 @@
             <div id="spacer"></div>
             <div id="scroll-text"></div>
         </div>
-        <div id = "chart-container">
+        <div id="chart-container">
             <div id="temp-chart"></div>
             <div id="act-chart"></div>
         </div>
     </div>
-
-    <!-- Create div for tooltips for charts -->
-    <!--
-    <dl id="male-tooltip">
-        <dt>Date</dt>
-        <dt id="male-tooltip-date"></dt>
-
-        <dt>Temp</dt>
-        <dd id="male-tooltip-temp"></dd>
-
-        <dt>Activity</dt>
-        <dd id="male-tooltip-activity"></dd>
-    </dl>
-    <dl id="female-tooltip">
-        <dt>Date</dt>
-        <dt id="female-tooltip-date"></dt>
-
-        <dt>Temp</dt>
-        <dd id="female-tooltip-temp"></dd>
-
-        <dt>Activity</dt>
-        <dd id="female-tooltip-activity"></dd>
-
-        <dt>Estrus</dt>
-        <dd id="female-tooltip-estrus"></dd>
-    </dl>
--->
-
-    <!-- Add some text for annotation/explanation -->
-    <!--<p id="scroll-annotation">These graphs allow for comparison of female and male mice over time. PLACEHOLDER TEXT.</p>-->
-
 </body>
 </html>

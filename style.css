@@ -11,11 +11,8 @@ h1 {
     color: #333;
 }
 
-/* Add styling for p elements*/
 p {
-    /* Add a margin  */
     margin: 10px 0;
-    /* Add a padding */
     padding: 0 150px;
     color: #333;
 }
@@ -66,7 +63,6 @@ button:hover {
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     pointer-events: none;
-    /* Font size */
     font-size: 12px;
 }
 
@@ -79,14 +75,13 @@ button:hover {
     margin: 0 0 10px 0;
 }
 
-#piechart{
+#piechart {
     display: flex;
     justify-content: center;
     margin: auto;
 }
 
 #scroll-container {
-    /* grid-column: 1 / -1; */
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -94,9 +89,7 @@ button:hover {
     margin: 0 auto; 
 }
 
-/* Adjust scrolling behavior */
 #scroller {
-    /* grid-column: 1; */
     position: relative;
     width: 100%;
     height: 350px;
@@ -105,7 +98,6 @@ button:hover {
     margin-bottom: 50px;
 }
 
-/* Style scroll-text p elements */
 #scroll-text p {
     text-align: left;
     margin: 10px 0;
@@ -113,9 +105,7 @@ button:hover {
     color: #333;
 }
 
-/* Stack male-chart and female-chart to the right of the scroll-container */
 #chart-container {
-    /* grid-column: 2; */
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -126,7 +116,6 @@ button:hover {
     width: 100%;
 }
 
-/* Container for dynamic day list */
 #scroll-text {
     position: absolute;
     top: 0;
@@ -146,23 +135,44 @@ button:hover {
     font-size: 0.9em;
     transform: translateY(-50%);
     pointer-events: none;
-  }
+}
 
-/* Plot styling for temp and act charts */
-/* #temp-chart {
-    
-} */
-
-/* #act-chart {
-    
-} */
-  
-/* Spacer ensures scrolling behavior */
 #spacer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     background: none;
+    pointer-events: none;
+}
+
+/* Advanced Chart Styles */
+#advanced-chart {
+    width: 80%;
+    max-width: 850px;
+    height: 500px;
+    margin: 20px auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+#advanced-chart svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#advanced-chart #tooltip {
+    background: rgba(0, 0, 0, 1);
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    position: absolute;
     pointer-events: none;
 }

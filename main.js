@@ -1,331 +1,567 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-// Data vars
-let femaleTempData = [];
-let maleTempData = [];
-let femaleActData = [];
-let maleActData = [];
+// ------------------------
+// Advanced Temperature Chart Code
+// ------------------------
 
-// Select summary-tooltip
-const summaryTooltip = d3.select("#summary-tooltip");
+// Global variables for temperature data and state
+let allTempData = [];
+let aggregatedMale, aggregatedFemaleEstrus, aggregatedFemaleNonEstrus;
+let expandedGroups = { male: false, estrus: false, "non-estrus": false };
+let selectedFilters = { male: true, estrus: true, "non-estrus": true };
 
-const times = d3.range(1440).map(i => new Date(2023, 0, 1, 0, i));
+const margin = { top: 30, right: 30, bottom: 60, left: 60 };
+// These dimensions will be computed from the container.
+let width, height;
+let svg, xScale, yScale, xAxis, yAxis;
+let originalXDomain, originalYDomain;
+let constantXScale;
+let brush; // Global brush variable
+
+// Create tooltip element inside the advanced chart container.
+const tooltip = d3.select("#advanced-chart")
+  .append("div")
+    .attr("id", "tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("opacity", 0);
+
 const LIGHTS_OFF_COLOR = "rgba(0, 0, 0, 0.1)";
+let globalYDomain;
 
-// For the full-day view, define custom ticks.
+// Smoothing window (in minutes)
+const SMOOTH_WINDOW = 5;
+
+// Precompute an array of Date objects—one for each minute in the day.
+const times = d3.range(1440).map(i => new Date(2023, 0, 1, 0, i));
+
+// Full-day ticks for x-axis.
 const fullDayTicks = [
-    new Date(2023, 0, 1, 0, 0),
-    new Date(2023, 0, 1, 3, 0),
-    new Date(2023, 0, 1, 6, 0),
-    new Date(2023, 0, 1, 9, 0),
-    new Date(2023, 0, 1, 12, 0),
-    new Date(2023, 0, 1, 15, 0),
-    new Date(2023, 0, 1, 18, 0),
-    new Date(2023, 0, 1, 21, 0),
-    new Date(2023, 0, 1, 23, 59)
-  ];
-  
-// Custom tick format: if tick is exactly 11:59 pm, show that text.
+  new Date(2023, 0, 1, 0, 0),
+  new Date(2023, 0, 1, 3, 0),
+  new Date(2023, 0, 1, 6, 0),
+  new Date(2023, 0, 1, 9, 0),
+  new Date(2023, 0, 1, 12, 0),
+  new Date(2023, 0, 1, 15, 0),
+  new Date(2023, 0, 1, 18, 0),
+  new Date(2023, 0, 1, 21, 0),
+  new Date(2023, 0, 1, 23, 59)
+];
+
+// Custom tick format.
 const customTimeFormat = d => {
-    if (d.getHours() === 23 && d.getMinutes() === 59) {
-        return "11:59 pm";
-    }
-    return d3.timeFormat("%-I %p")(d);
+  if (d.getHours() === 23 && d.getMinutes() === 59) return "11:59 pm";
+  return d3.timeFormat("%-I %p")(d);
 };
 
-// Processing functions 
+// Helper: Get dimensions from the #advanced-chart container.
+function getContainerDimensions() {
+  const container = d3.select("#advanced-chart").node();
+  return {
+    width: container.clientWidth,
+    height: container.clientHeight
+  };
+}
 
-// Fetch data
-async function loadTemperatureData(filename, label) {
-    let data = [];
-    const fileData = await d3.csv(`data/${filename}`);
-    
-    fileData.forEach((row, i) => {
-        if (!data[i]) {
-            data[i] = { minute: i + 1 };
+// Update chart dimensions using container dimensions.
+function updateDimensions() {
+  const dims = getContainerDimensions();
+  width = dims.width - margin.left - margin.right;
+  height = dims.height - margin.top - margin.bottom;
+  
+  d3.select("#advanced-chart svg")
+    .attr("width", dims.width)
+    .attr("height", dims.height);
+  
+  xScale.range([0, width]);
+  yScale.range([height, 0]);
+  
+  xAxis.attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(xScale)
+      .tickValues(fullDayTicks)
+      .tickFormat(customTimeFormat));
+  yAxis.call(d3.axisLeft(yScale));
+  
+  d3.select("#clip rect")
+    .attr("width", width)
+    .attr("height", height);
+  
+  svg.select("rect.background")
+    .attr("width", width)
+    .attr("height", height);
+  
+  d3.select(".lightOnLabel")
+    .attr("x", constantXScale(new Date(2023, 0, 1, 6, 0)));
+  d3.select(".lightOffLabel")
+    .attr("x", constantXScale(new Date(2023, 0, 1, 18, 0)));
+  
+  d3.select(".x-axis-label")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 10);
+  d3.select(".y-axis-label")
+    .attr("x", -height / 2)
+    .attr("y", -margin.left + 15);
+  
+  // Update brush extent.
+  svg.select(".brush")
+    .call(brush.extent([[0, 0], [width, height]]).on("end", brushed));
+  
+  updateBackground();
+  updateChart();
+}
+
+// Load temperature data.
+async function loadData() {
+  const [maleTemp, femTemp] = await Promise.all([
+    d3.csv("data/male_temp.csv", rowConverter),
+    d3.csv("data/fem_temp.csv", rowConverter)
+  ]);
+  
+  allTempData = [
+    ...processMiceData(maleTemp, "male"),
+    ...processMiceData(femTemp, "female")
+  ];
+  
+  // Compute overall y domain.
+  const allTempValues = allTempData.flatMap(d => d.data);
+  globalYDomain = [d3.min(allTempValues), d3.max(allTempValues)];
+  
+  // Compute aggregated lines.
+  const maleData = allTempData.filter(d => d.gender === "male");
+  const femaleEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "estrus");
+  const femaleNonEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "non-estrus");
+  
+  aggregatedMale = { id: "male_avg", gender: "male", type: "male", data: computeAggregatedLine(maleData) };
+  aggregatedFemaleEstrus = { id: "female_estrus_avg", gender: "female", type: "estrus", data: computeAggregatedLine(femaleEstrusData) };
+  aggregatedFemaleNonEstrus = { id: "female_non-estrus_avg", gender: "female", type: "non-estrus", data: computeAggregatedLine(femaleNonEstrusData) };
+  
+  initializeChart();
+  updateChart();
+}
+
+function rowConverter(d) {
+  const converted = {};
+  Object.keys(d).forEach(key => { converted[key] = +d[key]; });
+  return converted;
+}
+
+// Process CSV data into one-day averages.
+function processMiceData(dataset, gender) {
+  const miceIDs = Object.keys(dataset[0]).filter(k => k !== "minuteIndex");
+  return miceIDs.flatMap(mouseID => {
+    const dataArr = new Array(1440).fill(0);
+    let daysCount = 0;
+    dataset.forEach((row, idx) => {
+      const minute = idx % 1440;
+      dataArr[minute] += row[mouseID];
+      if (minute === 0) daysCount++;
+    });
+    const avgData = dataArr.map(v => v / daysCount);
+    if (gender === "female") {
+      let estrusData = new Array(1440).fill(0);
+      let nonEstrusData = new Array(1440).fill(0);
+      let estrusDays = 0, nonEstrusDays = 0;
+      dataset.forEach((row, idx) => {
+        const day = Math.floor(idx / 1440) + 1;
+        const minute = idx % 1440;
+        const isEstrus = ((day - 2) % 4 === 0);
+        if (isEstrus) {
+          estrusData[minute] += row[mouseID];
+          if (minute === 0) estrusDays++;
+        } else {
+          nonEstrusData[minute] += row[mouseID];
+          if (minute === 0) nonEstrusDays++;
         }
-
-        for (let j = 1; j <= 13; j++) {
-            data[i][`${label}${j}`] = Number(row[`${label}${j}`]) || NaN;
-        }
-    });
-    return data;
-}
-async function loadActivityData(filename, label) {
-    let data = [];
-    const fileData = await d3.csv(`data/${filename}`);
-    
-    fileData.forEach((row, i) => {
-        if (!data[i]) {
-            data[i] = { minute: i + 1 };
-        }
-
-        for (let j = 1; j <= 13; j++) {
-            data[i][`${label}${j}`] = Number(row[`${label}${j}`]) || 0;
-        }
-    });
-    return data;
-}
-
-// Smooth mice data over window_size minutes
-function smoothData(dataArray, window_size) {
-    return dataArray.map(entry => ({
-        id: entry.id,
-        data: entry.data.map((_, i, arr) => {
-            const start = Math.max(0, i - Math.floor(window_size / 2));
-            const end = Math.min(arr.length, i + Math.floor(window_size / 2) + 1);
-            return d3.mean(arr.slice(start, end));
-        })
-    }));
-}
-
-// Process mice data into average of the 14 days collapsed into 1 day
-function processMiceData(dataset) {
-    const miceIDs = Object.keys(dataset[0]).filter(k => k !== "minuteIndex");
-
-    let avgData = miceIDs.map(mouseID => {
-        const dailyData = new Array(1440).fill(0);
-        let daysCount = 0;
-
-        dataset.forEach((row, idx) => {
-            const minute = idx % 1440;
-            dailyData[minute] += row[mouseID];
-            if (minute === 0) daysCount++;
-        });
-
-        return {
-            id: mouseID,
-            data: dailyData.map(v => v / daysCount)
-        };
-    });
-
-    return avgData.slice(1);
-}
-
-// Function to produce one line per sex
-function averageTimeSeries(data, id) {
-    let numPoints = data[0].data.length;
-    let avgSeries = Array(numPoints).fill(0);
-
-    data.forEach(series => {
-        series.data.forEach((value, i) => {
-            avgSeries[i] += value;
-        });
-    });
-
-    return { id, data: avgSeries.map(sum => sum / data.length) };
-}
-
-let currentChart = "temp"
-// Main handler 
-document.addEventListener("DOMContentLoaded", async () => {
-    // Load data
-    const femaleLabel = ["f"];
-    const maleLabel = ["m"];
-
-    maleTempData = await loadTemperatureData("male_temp.csv", maleLabel);
-    femaleTempData = await loadTemperatureData("fem_temp.csv", femaleLabel);
-    maleActData = await loadActivityData("male_act.csv", maleLabel);
-    femaleActData = await loadActivityData("fem_act.csv", femaleLabel);
-
-    // Create general chart 
-    summaryChart(currentChart); 
-     
-    // Handle button behavior for summaryChart 
-    let tempButton = d3.select("#temp-button");
-    let actButton = d3.select("#activity-button");
-
-    // Create event listeners for buttons
-    tempButton.on("click", () => {
-        currentChart = "temp";
-        summaryChart(currentChart);
-    });
-    actButton.on("click", () => {
-        currentChart = "act";
-        summaryChart(currentChart);
-    });
-});
-
-// Event listeners for checkboxes
-document.getElementById("toggleFemale").addEventListener("change", function() {
-    summaryChart(currentChart);
-});
-
-document.getElementById("toggleMale").addEventListener("change", function() {
-    summaryChart(currentChart);
-});
-
-// Visualization functions 
-
-// Creates general chart for all data
-function summaryChart(chartType) {
-    const showFemale = document.getElementById("toggleFemale").checked;
-    const showMale = document.getElementById("toggleMale").checked;
-
-    // Process data into 14 days  
-    let maleAvgTempData = processMiceData(maleTempData);
-    let maleAvgActData = processMiceData(maleActData);
-    let femaleAvgTempData = processMiceData(femaleTempData);
-    let femaleAvgActData = processMiceData(femaleActData);
-
-    // Smoothe data for line plot
-    let maleAvgTempDataSmooth = smoothData(maleAvgTempData, 30);
-    let maleAvgActDataSmooth = smoothData(maleAvgActData, 30);
-    let femaleAvgTempDataSmooth = smoothData(femaleAvgTempData, 30);
-    let femaleAvgActDataSmooth = smoothData(femaleAvgActData, 30);
-
-    let maleTempOneLine = averageTimeSeries(maleAvgTempDataSmooth, "m_avg");
-    let maleActOneLine = averageTimeSeries(maleAvgActDataSmooth, "m_avg");
-    let femaleTempOneLine = averageTimeSeries(femaleAvgTempDataSmooth, "f_avg");
-    let femaleActOneLine = averageTimeSeries(femaleAvgActDataSmooth, "f_avg");
-
-    const margin = { top: 20, right: 30, bottom: 50, left: 50 };
-    const containerWidth = 800;
-    const containerHeight = 450;
-
-    const width = containerWidth - margin.left - margin.right;
-    const height = containerHeight - margin.top - margin.bottom;
-
-    // Clear #summary-chart SVG element
-    d3.select("#summary-chart").selectAll("*").remove();
-
-    // Create SVG element
-    const svg = d3.select("#summary-chart")
-        .append("svg")
-            .attr("width", containerWidth)
-            .attr("height", containerHeight)
-        .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Add a clipPath so that lines are contained.
-    svg.append("defs")
-        .append("clipPath")
-        .attr("id", "clip")
-        .append("rect")
-        .attr("width", width)
-        .attr("height", height);
-
-    // Create scales
-    let xScale = d3.scaleTime()
-        .domain([new Date(2023, 0, 1, 0, 0), new Date(2023, 0, 1, 23, 59)])
-        .range([0, width]);
-
-    let yScale;
-
-    // Add x-axis title: "Time of Day"
-    svg.append("text")
-        .attr("class", "x-axis-label")
-        .attr("x", width / 2)
-        .attr("y", height + margin.bottom - 10)
-        .attr("text-anchor", "middle")
-        .text("Time of Day");
-
-    // Draw x-axis. For the full-day view, force our custom tick values.
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xScale)
-            .tickValues(fullDayTicks)
-            .tickFormat(customTimeFormat)
-        );
-
-    // Conditional for loading data based on button input 
-    let data, yLabel;
-    if (chartType === "temp") {
-        data = [maleTempOneLine, femaleTempOneLine];
-        if (showMale) data.push(...maleAvgTempDataSmooth);
-        if (showFemale) data.push(...femaleAvgTempDataSmooth);
-        yLabel = "Temperature (°C)";
-        yScale = d3.scaleLinear()
-            .domain([34, d3.max(data, d => d3.max(d.data))])
-            .range([height, 0]);
-    } else if (chartType === "act") {
-        data = [maleActOneLine, femaleActOneLine];
-        if (showMale) data.push(...maleAvgActDataSmooth);
-        if (showFemale) data.push(...femaleAvgActDataSmooth);
-        yLabel = "Activity";
-        yScale = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d3.max(d.data))])
-            .range([height, 0]);
+      });
+      const result = [];
+      if (estrusDays > 0) {
+        result.push({ id: mouseID, gender, type: "estrus", data: estrusData.map(v => v/estrusDays) });
+      }
+      if (nonEstrusDays > 0) {
+        result.push({ id: mouseID, gender, type: "non-estrus", data: nonEstrusData.map(v => v/nonEstrusDays) });
+      }
+      return result;
+    } else {
+      return [{ id: mouseID, gender, type: "male", data: avgData }];
     }
-
-    // Draw y-axis
-    svg.append("g")
-        .call(d3.axisLeft(yScale));
-
-    // Add y-axis title
-    svg.append("text")
-        .attr("class", "y-axis-label")
-        .attr("transform", "rotate(-90)")
-        .attr("y", -margin.left + 15)
-        .attr("x", -height / 2)
-        .attr("text-anchor", "middle")
-        .text(yLabel);
-
-    const lineGenerator = d3.line()
-        .x((d, i) => xScale(times[i]))
-        .y(d => yScale(d))
-        .curve(d3.curveMonotoneX);
-
-    const colorMapping = {
-        "maleTrend": "#1f78b4",
-        "femaleTrend": "#f06c82",
-        "maleSmooth": "#a6cee3",
-        "femaleSmooth": "#fac1c0"
-    };
-
-    // Draw lines
-    svg.selectAll(".mouse-line")
-        .data(data)
-        .enter()
-        .append("path")
-            .attr("class", "mouse-line")
-            .attr("clip-path", "url(#clip)")
-            .attr("fill", "none")
-            .attr("stroke-width", 1.5)
-            .attr("opacity", 0.7)
-            .on("mouseover", showSummaryTooltip)
-            .on("mousemove", moveSummaryTooltip)
-            .on("mouseleave", hideSummaryTooltip)
-        .attr("d", d => lineGenerator(d.data))
-        .attr("stroke", d => {
-            if (d === maleTempOneLine || d === maleActOneLine) return colorMapping["maleTrend"];
-            if (d === femaleTempOneLine || d === femaleActOneLine) return colorMapping["femaleTrend"];
-            if (maleAvgTempDataSmooth.includes(d) || maleAvgActDataSmooth.includes(d)) return colorMapping["maleSmooth"];
-            if (femaleAvgTempDataSmooth.includes(d) || femaleAvgActDataSmooth.includes(d)) return colorMapping["femaleSmooth"];
-            return "black";
-        });
+  });
 }
 
-function showSummaryTooltip(event, mouse) {
-    const hoveredId = mouse.id;
-    d3.selectAll(".mouse-line")
+function computeAggregatedLine(dataArray) {
+  const count = dataArray.length;
+  const aggregated = new Array(1440).fill(0);
+  dataArray.forEach(d => {
+    d.data.forEach((value, i) => {
+      aggregated[i] += value;
+    });
+  });
+  return aggregated.map(v => v / count);
+}
+
+// Smoothing function.
+function smoothData(dataArray, window_size) {
+  return dataArray.map(entry => ({
+    id: entry.id,
+    gender: entry.gender,
+    type: entry.type,
+    data: entry.data.map((_, i, arr) => {
+      const start = Math.max(0, i - Math.floor(window_size / 2));
+      const end = Math.min(arr.length, i + Math.floor(window_size / 2) + 1);
+      return d3.mean(arr.slice(start, end));
+    })
+  }));
+}
+
+// Returns the data to display based on filters and expansion state.
+function getChartData() {
+  let chartData = [];
+  const maleData = allTempData.filter(d => d.gender === "male");
+  const femaleEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "estrus");
+  const femaleNonEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "non-estrus");
+  
+  if (selectedFilters.male) {
+    if (!expandedGroups.male) chartData.push(aggregatedMale);
+    else chartData.push(...maleData);
+  }
+  if (selectedFilters.estrus) {
+    if (!expandedGroups.estrus) chartData.push(aggregatedFemaleEstrus);
+    else chartData.push(...femaleEstrusData);
+  }
+  if (selectedFilters["non-estrus"]) {
+    if (!expandedGroups["non-estrus"]) chartData.push(aggregatedFemaleNonEstrus);
+    else chartData.push(...femaleNonEstrusData);
+  }
+  return chartData;
+}
+
+function initializeChart() {
+  // Compute container dimensions.
+  const dims = getContainerDimensions();
+  width = dims.width - margin.left - margin.right;
+  height = dims.height - margin.top - margin.bottom;
+  
+  svg = d3.select("#advanced-chart")
+    .append("svg")
+      .attr("width", dims.width)
+      .attr("height", dims.height)
+    .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+  
+  svg.append("defs")
+    .append("clipPath")
+      .attr("id", "clip")
+    .append("rect")
+      .attr("width", width)
+      .attr("height", height);
+  
+  xScale = d3.scaleTime()
+    .domain([new Date(2023,0,1,0,0), new Date(2023,0,1,23,59)])
+    .range([0, width]);
+  
+  yScale = d3.scaleLinear()
+    .domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02])
+    .range([height, 0]);
+  
+  originalXDomain = xScale.domain();
+  originalYDomain = yScale.domain();
+  
+  constantXScale = d3.scaleTime()
+    .domain(originalXDomain)
+    .range([0, width]);
+  
+  svg.append("rect")
+    .attr("class", "background")
+    .attr("y", 0)
+    .attr("height", height)
+    .attr("fill", LIGHTS_OFF_COLOR);
+  
+  // Light conditions labels.
+  svg.append("text")
+    .attr("class", "lightOnLabel")
+    .attr("x", constantXScale(new Date(2023,0,1,6,0)))
+    .attr("y", 20)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#333")
+    .style("font-size", "16px");
+    
+  svg.append("text")
+    .attr("class", "lightOffLabel")
+    .attr("x", constantXScale(new Date(2023,0,1,18,0)))
+    .attr("y", 20)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#333")
+    .style("font-size", "16px");
+  
+  // X-axis title.
+  svg.append("text")
+    .attr("class", "x-axis-label")
+    .attr("x", width/2)
+    .attr("y", height + margin.bottom - 10)
+    .attr("text-anchor", "middle")
+    .style("font-size", "14px")
+    .style("fill", "#333")
+    .text("Time of Day");
+  
+  xAxis = svg.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(xScale)
+      .tickValues(fullDayTicks)
+      .tickFormat(customTimeFormat)
+    );
+  
+  yAxis = svg.append("g")
+    .call(d3.axisLeft(yScale));
+  
+  svg.append("text")
+    .attr("class", "y-axis-label")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -margin.left + 15)
+    .attr("x", -height/2)
+    .style("text-anchor", "middle")
+    .text("Temperature (°C)");
+  
+  // Light conditions legend inside the chart.
+  const lightLegend = svg.append("g")
+    .attr("class", "light-legend")
+    .attr("transform", `translate(${width - 120},10)`);
+    
+  lightLegend.append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", 20)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .attr("stroke", "black");
+    
+  lightLegend.append("text")
+    .attr("x", 25)
+    .attr("y", 15)
+    .text("Light On");
+    
+  lightLegend.append("rect")
+    .attr("x", 0)
+    .attr("y", 25)
+    .attr("width", 20)
+    .attr("height", 20)
+    .attr("fill", LIGHTS_OFF_COLOR)
+    .attr("stroke", "black");
+    
+  lightLegend.append("text")
+    .attr("x", 25)
+    .attr("y", 40)
+    .text("Light Off");
+  
+  // Brush for zooming.
+  brush = d3.brushX()
+    .extent([[0,0],[width,height]])
+    .on("end", brushed);
+  svg.append("g")
+    .attr("class", "brush")
+    .call(brush);
+  
+  updateBackground();
+}
+
+function updateBackground() {
+  const greyStart = new Date(2023,0,1,12,0);
+  const greyEnd = new Date(2023,0,1,23,59);
+  const currentDomain = xScale.domain();
+  const overlapStart = currentDomain[0] > greyStart ? currentDomain[0] : greyStart;
+  const overlapEnd = currentDomain[1] < greyEnd ? currentDomain[1] : greyEnd;
+  if (overlapStart < overlapEnd) {
+    const x = xScale(overlapStart);
+    const w = xScale(overlapEnd) - xScale(overlapStart);
+    svg.select("rect.background")
+      .attr("x", x)
+      .attr("width", w)
+      .attr("visibility", "visible");
+  } else {
+    svg.select("rect.background").attr("visibility", "hidden");
+  }
+}
+
+function updateXAxis() {
+  const currentDomain = xScale.domain();
+  if (currentDomain[0].getTime() === originalXDomain[0].getTime() &&
+      currentDomain[1].getTime() === originalXDomain[1].getTime()) {
+    xAxis.transition().duration(250)
+      .call(d3.axisBottom(xScale)
+        .tickValues(fullDayTicks)
+        .tickFormat(customTimeFormat)
+      );
+  } else {
+    let tickInterval, tickFormat;
+    const oneHour = 60*60*1000, sixHours = 6*oneHour, tenMinutes = 10*60*1000;
+    const domainDuration = currentDomain[1] - currentDomain[0];
+    if (domainDuration > sixHours) {
+      tickInterval = d3.timeHour.every(1);
+      tickFormat = d3.timeFormat("%-I %p");
+    } else if (domainDuration > oneHour) {
+      tickInterval = d3.timeMinute.every(15);
+      tickFormat = d3.timeFormat("%-I:%M %p");
+    } else if (domainDuration > tenMinutes) {
+      tickInterval = d3.timeMinute.every(5);
+      tickFormat = d3.timeFormat("%-I:%M %p");
+    } else {
+      tickInterval = d3.timeMinute.every(1);
+      tickFormat = d3.timeFormat("%-I:%M:%S %p");
+    }
+    xAxis.transition().duration(250)
+      .call(d3.axisBottom(xScale)
+        .ticks(tickInterval)
+        .tickFormat(tickFormat)
+      );
+  }
+}
+
+function updateChart() {
+  const chartData = getChartData();
+  const smoothedData = smoothData(chartData, SMOOTH_WINDOW);
+  
+  // Always show full global range.
+  yScale.domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02]);
+  yAxis.transition().duration(250).call(d3.axisLeft(yScale));
+  updateXAxis();
+  updateBackground();
+  
+  const lineGenerator = d3.line()
+      .x((d, i) => xScale(times[i]))
+      .y(d => yScale(d))
+      .curve(d3.curveMonotoneX);
+  
+  const lines = svg.selectAll(".mouse-line")
+      .data(smoothedData, d => d.id);
+  
+  lines.enter()
+      .append("path")
+        .attr("class", "mouse-line")
+        .attr("clip-path", "url(#clip)")
+        .attr("fill", "none")
+        .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
+        .attr("opacity", d => d.id.includes("avg") ? 0.7 : 0)
+        .on("mouseover", showTooltip)
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip)
+        .on("click", lineClicked)
+      .merge(lines)
+      .transition().duration(d => d.id.includes("avg") ? 250 : 600)
+          .attr("d", d => lineGenerator(d.data))
+          .attr("stroke", d => {
+              if (d.gender === "male") return "#3690c0";
+              return d.type === "estrus" ? "#ff0000" : "#ffa500";
+          })
+          .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
+          .attr("opacity", 0.7);
+  
+  lines.exit().remove();
+  
+  // Bring average lines to front.
+  svg.selectAll(".mouse-line")
+      .filter(d => d.id.includes("avg"))
+      .raise();
+}
+
+function brushed(event) {
+  if (!event.selection) return;
+  const [x0, x1] = event.selection;
+  xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+  updateXAxis();
+  yAxis.transition().duration(500).call(d3.axisLeft(yScale));
+  updateBackground();
+  
+  const lineGenerator = d3.line()
+      .x((d, i) => xScale(times[i]))
+      .y(d => yScale(d))
+      .curve(d3.curveMonotoneX);
+  svg.selectAll(".mouse-line")
+      .transition().duration(500)
+      .attr("d", d => lineGenerator(d.data));
+  
+  svg.select(".brush").call(brush.move, null);
+}
+
+function resetBrush() {
+  xScale.domain(originalXDomain);
+  yScale.domain(originalYDomain);
+  updateXAxis();
+  yAxis.transition().duration(500).call(d3.axisLeft(yScale));
+  updateBackground();
+  
+  const lineGenerator = d3.line()
+      .x((d, i) => xScale(times[i]))
+      .y(d => yScale(d))
+      .curve(d3.curveMonotoneX);
+  svg.selectAll(".mouse-line")
+      .transition().duration(500)
+      .attr("d", d => lineGenerator(d.data));
+}
+
+function showTooltip(event, mouse) {
+  const hoveredId = mouse.id;
+  d3.selectAll(".mouse-line")
       .filter(d => d.id === hoveredId)
       .attr("opacity", 1)
-      .attr("stroke-width", 2.5);
-    d3.selectAll(".mouse-line")
+      .attr("stroke-width", d => d.id.includes("avg") ? 3 : 2.5);
+  d3.selectAll(".mouse-line")
       .filter(d => d.id !== hoveredId)
-      .attr("opacity", 0.1);
-
-    const gender = hoveredId.startsWith("m") ? "Male" : "Female";
-
-    d3.select("#summary-tooltip-id").text(hoveredId);
-    d3.select("#summary-tooltip-gender").text(gender);
-
-    summaryTooltip
-      .style("display", "block")
-      .style("opacity", .80)
-      .style("left", `${event.pageX + 15}px`)
-      .style("top", `${event.pageY - 15}px`);
-}
+      .attr("opacity", 0.5);
   
-function moveSummaryTooltip(event) {
-    summaryTooltip.style("left", `${event.pageX + 15}px`)
-            .style("top", `${event.pageY - 15}px`);
+  // Position tooltip relative to container.
+  const container = d3.select("#advanced-chart").node();
+  const [x, y] = d3.pointer(event, container);
+  tooltip.style("left", `${x + 15}px`)
+         .style("top", `${y - 15}px`)
+         .style("opacity", 1)
+         .html(`
+            <strong>${mouse.id}</strong><br>
+            Gender: ${mouse.gender}<br>
+            ${mouse.type ? `Type: ${mouse.type.replace("-", " ")}` : ""}
+         `);
 }
 
-function hideSummaryTooltip() {
-    d3.selectAll(".mouse-line")
-        .attr("opacity", 0.7)
-        .attr("stroke-width", 1.5);
-    summaryTooltip.style("opacity", 0);
+function moveTooltip(event) {
+  const container = d3.select("#advanced-chart").node();
+  const [x, y] = d3.pointer(event, container);
+  tooltip.style("left", `${x + 15}px`)
+         .style("top", `${y - 15}px`);
 }
+
+function hideTooltip() {
+  d3.selectAll(".mouse-line")
+      .attr("opacity", 0.7)
+      .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5);
+  tooltip.style("opacity", 0);
+}
+
+function lineClicked(event, d) {
+  let groupKey;
+  if (d.gender === "male") groupKey = "male";
+  else if (d.gender === "female") groupKey = d.type;
+  expandedGroups[groupKey] = !expandedGroups[groupKey];
+  updateChart();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadData();
+  // Add event listeners for advanced chart filtering controls.
+  d3.select("#maleCheckbox").on("change", function() {
+    selectedFilters.male = this.checked;
+    updateChart();
+  });
+  d3.select("#estrusCheckbox").on("change", function() {
+    selectedFilters.estrus = this.checked;
+    updateChart();
+  });
+  d3.select("#nonEstrusCheckbox").on("change", function() {
+    selectedFilters["non-estrus"] = this.checked;
+    updateChart();
+  });
+  d3.select("#resetBrush").on("click", resetBrush);
+});
+
+// Resize chart on window resize.
+window.addEventListener("resize", () => {
+  updateDimensions();
+  svg.select(".brush").call(brush.move, null);
+});
+
