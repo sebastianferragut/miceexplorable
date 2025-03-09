@@ -1,29 +1,39 @@
-/* General styling for full-screen detail chart */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
     background-color: #f4f4f4;
     text-align: center;
+    position: relative;
+  }
+  
+  #back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    cursor: pointer;
+  }
+  
+  #back-button svg {
+    fill: none;
   }
   
   h1 {
     color: #333;
     margin-bottom: 10px;
+    margin-top: 50px; /* extra space so title doesn't overlap back icon */
   }
   
-  /* The chart container fills the full width */
   #detail-chart {
     width: 100%;
     max-width: 100%;
     height: 600px;
-    margin: 0 auto;
+    margin: 50px auto 0; /* add top margin to account for back icon */
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
   }
   
-  /* Controls styling */
   #controls {
     margin-top: 10px;
   }
@@ -43,26 +53,41 @@ body {
     background-color: #0056b3;
   }
   
-  /* Legend styling */
   #legend {
     margin-top: 15px;
     display: flex;
     justify-content: center;
     gap: 15px;
     flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 10px;
+  }
+  
+  .legend-container {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
   }
   
   .legend-item {
     display: flex;
     align-items: center;
     font-size: 14px;
+    margin: 5px;
   }
   
   .legend-swatch {
+    width: 20px;
+    height: 20px;
     margin-right: 5px;
+    border: 1px solid #000;
+    border-radius: 3px;
   }
   
-  /* Tooltip styling */
   .tooltip {
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
