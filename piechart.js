@@ -1,14 +1,15 @@
 // Data storage for temperatures
 let femaleTempData = [];
 let maleTempData = [];
+let femaleActData = [];
+let maleActData = [];
 
 // Load temperature data from CSV files
-async function loadTemperatureData(filenames, labels) {
+async function loadData(filenames, labels) {
     let data = [];
 
     for (let fileIndex = 0; fileIndex < filenames.length; fileIndex++) {
         const filename = filenames[fileIndex];
-        console.log(filename);
         const subjectPrefix = labels[fileIndex];
 
         const fileData = await d3.csv(`./data/${filename}`);
@@ -26,16 +27,15 @@ async function loadTemperatureData(filenames, labels) {
     return data;
 }
 
-// Categorize temperature data into 0.5°C bins
-function categorizeTemperatureData(tempData) {
+function categorizeData(data, minData, maxData, binsize) {
     let bins = {};
-    for (let temp = 35; temp < 40; temp += 0.5) {
-        bins[`${temp}-${temp + 0.5}`] = 0;
+    for (let temp = minData; temp < maxData; temp += binsize) {
+        bins[`${temp}-${temp + binsize}`] = 0;
     }
 
     let totalValues = 0;
 
-    tempData.flat().forEach(temp => {
+    data.flat().forEach(temp => {
         for (let bin in bins) {
             let [low, high] = bin.split("-").map(Number);
             if (temp >= low && temp < high) {
@@ -45,13 +45,13 @@ function categorizeTemperatureData(tempData) {
             }
         }
     });
-
-    return bins; // Store actual counts for hover effect
+    console.log(bins)
+    return bins; 
 }
 
 // Draw the two pie charts (Left: Male, Right: Female)
-function drawPieCharts(femaleBins, maleBins) {
-    const svg = d3.select("#piechart").append("svg")
+function drawPieCharts(femaleBins, maleBins, dataType, divId) {
+    const svg = d3.select(divId).append("svg")
         .attr("width", 1200) // Increased width for two pie charts
         .attr("height", 600);
 
@@ -62,8 +62,8 @@ function drawPieCharts(femaleBins, maleBins) {
     // Define color gradient from yellow → orange → red
     const uniqueBins = Object.keys(femaleBins);
     const colorScale = d3.scaleLinear()
-        .domain([0, uniqueBins.length - 1])
-        .range(["yellow", "red"]); // Gradient from yellow to red
+        .domain([0, uniqueBins.length])
+        .range(["yellow", "red"]); 
 
     const pie = d3.pie().sort(null).value(d => d.value);
 
@@ -98,7 +98,7 @@ function drawPieCharts(femaleBins, maleBins) {
     function showTooltip(event, d, gender) {
         tooltip.style("visibility", "visible")
             .html(`<strong>${gender} Mice</strong><br>
-                   Temperature: ${d.data.key}°C<br>
+                   ${dataType}: ${d.data.key} ${dataType === "Temperature" ?"°C"  : ""} <br>
                    Count: ${d.data.value}`)
             .style("top", `${event.pageY - 20}px`)
             .style("left", `${event.pageX + 10}px`);
@@ -118,7 +118,10 @@ function drawPieCharts(femaleBins, maleBins) {
         .attr("fill", d => d.data.color)
         .attr("stroke", "")
         .attr("stroke-width", 1)
-        .on("mouseover", (event, d) => showTooltip(event, d, "Male"))
+        .attr("class", 'arc')
+        .on("mouseover", (event, d) => {
+            showTooltip(event, d, "Male")
+        })
         .on("mousemove", (event) => {
             tooltip.style("top", `${event.pageY - 20}px`)
                    .style("left", `${event.pageX + 10}px`);
@@ -134,6 +137,7 @@ function drawPieCharts(femaleBins, maleBins) {
         .attr("fill", d => d.data.color)
         .attr("stroke", "")
         .attr("stroke-width", 1)
+        .attr("class", 'arc')
         .on("mouseover", (event, d) => showTooltip(event, d, "Female"))
         .on("mousemove", (event) => {
             tooltip.style("top", `${event.pageY - 20}px`)
@@ -148,7 +152,7 @@ function drawPieCharts(femaleBins, maleBins) {
         .attr("text-anchor", "middle")
         .style("font-size", "20px")
         .style("font-weight", "bold")
-        .text("Male Mice Temperature Distribution");
+        .text(`Male Mice ${dataType} Distribution`);
 
     svg.append("text")
         .attr("x", (width * 3) / 4)
@@ -156,13 +160,13 @@ function drawPieCharts(femaleBins, maleBins) {
         .attr("text-anchor", "middle")
         .style("font-size", "20px")
         .style("font-weight", "bold")
-        .text("Female Mice Temperature Distribution");
+        .text(`Female Mice ${dataType} Distribution`);
 
     // Legend
-    const legend = svg.append("g")
+    const femaleLegend = svg.append("g")
         .attr("transform", `translate(${width / 2 - 80}, 100)`);
 
-    legend.selectAll("rect")
+    femaleLegend.selectAll("rect")
         .data(uniqueBins)
         .enter()
         .append("rect")
@@ -172,7 +176,29 @@ function drawPieCharts(femaleBins, maleBins) {
         .attr("height", 20)
         .attr("fill", (d, i) => colorScale(i));
 
-    legend.selectAll("text")
+    femaleLegend.selectAll("text")
+        .data(uniqueBins)
+        .enter()
+        .append("text")
+        .attr("x", 30)
+        .attr("y", (d, i) => i * 20 + 15)
+        .text(d => d)
+        .attr("font-size", "12px");
+    
+    const maleLegend = svg.append("g")
+        .attr("transform", `translate(${width-80}, 100)`);
+
+    maleLegend.selectAll("rect")
+        .data(uniqueBins)
+        .enter()
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", (d, i) => i * 20)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("fill", (d, i) => colorScale(i));
+
+    maleLegend.selectAll("text")
         .data(uniqueBins)
         .enter()
         .append("text")
@@ -182,18 +208,38 @@ function drawPieCharts(femaleBins, maleBins) {
         .attr("font-size", "12px");
 }
 
+function findMinMax(arr) {
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (const row of arr) {
+        for (const num of row) {
+            if (num < min) min = num;
+            if (num > max) max = num;
+        }
+    }
+    min = Math.floor(min)
+    max = Math.ceil(max)
+    return { min, max };
+}
+
 // Load data and generate the charts
 document.addEventListener("DOMContentLoaded", async () => {
     const tempFiles = [
         "fem_temp.csv",
         "male_temp.csv"
     ];
+
+    const activityFiles = [
+        "fem_act.csv",
+        "male_act.csv",
+    ];
     const labels = ["f", "m"];
 
-    const temperatureData = await loadTemperatureData(tempFiles, labels);
+    const temperatureData = await loadData(tempFiles, labels);
+    const activityData = await loadData(activityFiles, labels);
+    
 
-    femaleTempData = [];
-    maleTempData = [];
 
     for (let min = 0; min < temperatureData.length; min++) {
         let minuteTemps = temperatureData[min];
@@ -204,8 +250,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    const femaleBins = categorizeTemperatureData(femaleTempData);
-    const maleBins = categorizeTemperatureData(maleTempData);
+    for (let min = 0; min < activityData.length; min++) {
+        let minuteAct = activityData[min];
 
-    drawPieCharts(femaleBins, maleBins);
+        if (minuteAct) {
+            femaleActData.push(Object.values(minuteAct).slice(1, 14));
+            maleActData.push(Object.values(minuteAct).slice(14, 26));
+        }
+    }
+    const femaleTempStats = findMinMax(femaleTempData);
+    const maleTempStats = findMinMax(maleTempData);
+    const femaleActStats = findMinMax(femaleActData);
+    const maleActStats = findMinMax(maleActData)
+    console.log(maleActStats)
+    console.log(femaleActStats)
+
+    const femaleTempBins = categorizeData(femaleTempData, femaleTempStats.min, femaleTempStats.max, 0.5);
+    const maleTempBins = categorizeData(maleTempData, maleTempStats.min, maleTempStats.max, 0.5);
+    const femaleActBins = categorizeData(femaleActData, femaleActStats.min, femaleActStats.max, 25);
+    const maleActBins = categorizeData(maleActData, maleActStats.min, maleActStats.max, 25);
+    drawPieCharts(femaleTempBins, maleTempBins, 'Temperature', "#temp-pie-chart");
+    drawPieCharts(femaleActBins, maleActBins, "Activity", "#activity-pie-chart");
 });
