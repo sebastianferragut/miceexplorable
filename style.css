@@ -75,9 +75,10 @@ button:hover {
     margin: 0 0 10px 0;
 }
 
-#piechart {
+#temp-pie-chart, #activity-pie-chart{
     display: flex;
     justify-content: center;
+    align-items: center;
     margin: auto;
 }
 
@@ -175,4 +176,8 @@ button:hover {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     position: absolute;
     pointer-events: none;
+}
+
+.arc:hover {
+    transform: scale(1.1);
 }
