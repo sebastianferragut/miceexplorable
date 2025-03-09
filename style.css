@@ -175,4 +175,243 @@ button:hover {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     position: absolute;
     pointer-events: none;
+}/* General Page Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
 }
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    color: #333;
+}
+
+p {
+    margin: 10px 0;
+    padding: 0 150px;
+    color: #333;
+}
+
+#summary-annotation {
+    text-align: center;
+}
+
+#summary-chart {
+    width: 80%;
+    max-width: 850px;
+    height: 450px;
+    margin: 20px auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#summary-tooltip {
+    display: none;
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+    font-size: 12px;
+}
+
+#summary-tooltip dt {
+    font-weight: bold;
+    margin: 0 0 5px 0;
+}
+
+#summary-tooltip dd {
+    margin: 0 0 10px 0;
+}
+
+#piechart {
+    display: flex;
+    justify-content: center;
+    margin: auto;
+}
+
+#scroll-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 95%;
+    margin: 0 auto; 
+}
+
+#scroller {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    margin-bottom: 50px;
+}
+
+#scroll-text p {
+    text-align: left;
+    margin: 10px 0;
+    padding: 10px;
+    color: #333;
+}
+
+#chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#temp-chart,
+#act-chart {
+    width: 100%;
+}
+
+#scroll-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+}
+
+#scroll-indicator {
+    position: fixed;
+    top: 50%;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+#spacer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: none;
+    pointer-events: none;
+}
+
+/* Advanced Chart and Controls Container */
+#advanced-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 80%;
+    max-width: 850px;
+    margin: 20px auto;
+}
+
+/* Advanced Chart Styles */
+#advanced-chart {
+    flex: 1;
+    height: 500px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+#advanced-chart svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#advanced-chart #tooltip {
+    background: rgba(0, 0, 0, 1);
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    position: absolute;
+    pointer-events: none;
+}
+
+/* Advanced Controls (Legend + Reset Button) */
+#advanced-controls {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#advanced-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #f8f8f8;
+    border-radius: 4px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+}
+
+#advanced-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#advanced-legend .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+#reset-container {
+    text-align: center;
+}
+
+#resetBrush {
+    padding: 10px 20px;
+    background-color: grey;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 12px;
+}
+
+#resetBrush:hover {
+    background-color: darkgrey;
+}
+
