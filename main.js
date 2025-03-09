@@ -461,6 +461,21 @@ function updateChart() {
       .raise();
 }
 
+// Modified click handler:
+// If the clicked line is an individual (its id does NOT include "avg"),
+// redirect to the detailed chart page.
+function lineClicked(event, d) {
+  if (!d.id.includes("avg")) {
+    window.location.href = `mouseDetail.html?mouseID=${d.id}`;
+  } else {
+    let groupKey;
+    if (d.gender === "male") groupKey = "male";
+    else if (d.gender === "female") groupKey = d.type;
+    expandedGroups[groupKey] = !expandedGroups[groupKey];
+    updateChart();
+  }
+}
+
 function brushed(event) {
   if (!event.selection) return;
   const [x0, x1] = event.selection;
@@ -533,14 +548,6 @@ function hideTooltip() {
   tooltip.style("opacity", 0);
 }
 
-function lineClicked(event, d) {
-  let groupKey;
-  if (d.gender === "male") groupKey = "male";
-  else if (d.gender === "female") groupKey = d.type;
-  expandedGroups[groupKey] = !expandedGroups[groupKey];
-  updateChart();
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
   // Add event listeners for advanced chart filtering controls.
@@ -564,4 +571,3 @@ window.addEventListener("resize", () => {
   updateDimensions();
   svg.select(".brush").call(brush.move, null);
 });
-
