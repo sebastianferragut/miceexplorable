@@ -1,36 +1,74 @@
+/* General styling for full-screen detail chart */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background-color: #f4f4f4;
-  text-align: center;
-}
-
-h1 {
-  color: #333;
-}
-
-#detail-chart {
-  margin: 20px auto;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  width: 90%;
-  max-width: 1000px;
-}
-
-#back-button {
-  padding: 10px 20px;
-  margin-top: 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-#back-button:hover {
-  background-color: #0056b3;
-}
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    text-align: center;
+  }
+  
+  h1 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  /* The chart container fills the full width */
+  #detail-chart {
+    width: 100%;
+    max-width: 100%;
+    height: 600px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  /* Controls styling */
+  #controls {
+    margin-top: 10px;
+  }
+  
+  button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Legend styling */
+  #legend {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+  }
+  
+  .legend-swatch {
+    margin-right: 5px;
+  }
+  
+  /* Tooltip styling */
+  .tooltip {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+  }
+  
