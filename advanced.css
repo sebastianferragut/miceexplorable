@@ -1,0 +1,60 @@
+/* Advanced page-specific styles */
+#advanced-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 80%;
+  max-width: 850px;
+  margin: 20px auto;
+}
+#advanced-chart {
+  flex: 1;
+  height: 500px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+}
+#advanced-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#advanced-controls {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+#advanced-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background: #f8f8f8;
+  border-radius: 4px;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+}
+#advanced-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+#advanced-legend .legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+}
+#reset-container {
+  text-align: center;
+}
+#mouse-selector {
+  text-align: center;
+  margin-top: 20px;
+}

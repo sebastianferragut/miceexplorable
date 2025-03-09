@@ -390,5 +390,5 @@ window.addEventListener("resize", updateDimensions);
 // ----- Button Event Listeners -----
 d3.select("#resetBrushDetail").on("click", resetBrush);
 d3.select("#back-button").on("click", () => {
-  window.location.href = "index.html";
+  window.location.href = "home.html";
 });

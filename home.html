@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">         <!-- General styles -->
+  <link rel="stylesheet" href="home.css">          <!-- Home page–specific styles -->
+  <!-- Include the pie chart code -->
+  <script type="module" src="piechart.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <title>Of Mice and Medicine - Home</title>
+</head>
+<body>
+  <h1>Of Mice and Medicine: The Impact of Biological Sex on Body Temperature and Activity</h1>
+  
+  <!-- Containers for pie charts -->
+  <div id="piechart"></div>
+  <div id="temp-pie-chart"></div>
+  <div id="activity-pie-chart"></div>
+  
+  <!-- Navigation button to go to the advanced chart page -->
+  <div id="nav-advanced">
+    <button id="to-advanced">Go to Advanced Chart</button>
+  </div>
+  <script>
+    document.getElementById('to-advanced').addEventListener('click', () => {
+      window.location.href = 'advanced.html';
+    });
+  </script>
+</body>
+</html>

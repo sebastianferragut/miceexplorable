@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">           <!-- General styles -->
+  <link rel="stylesheet" href="advanced.css">        <!-- Advanced page–specific styles -->
+  <!-- Advanced chart code -->
+  <script type="module" src="main.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <title>Advanced Chart - Of Mice and Medicine</title>
+</head>
+<body>
+  <h1>Advanced Temperature Chart</h1>
+  <!-- Container for advanced chart and controls -->
+  <div id="advanced-container">
+    <div id="advanced-chart"></div>
+    <div id="advanced-controls">
+      <div id="advanced-legend">
+        <label class="legend-item">
+          <input type="checkbox" id="maleCheckbox" checked>
+          <span class="legend-color" style="background-color: #3690c0;"></span>
+          Males
+        </label>
+        <label class="legend-item">
+          <input type="checkbox" id="estrusCheckbox" checked>
+          <span class="legend-color" style="background-color: #ff0000;"></span>
+          Females (Estrus)
+        </label>
+        <label class="legend-item">
+          <input type="checkbox" id="nonEstrusCheckbox" checked>
+          <span class="legend-color" style="background-color: #ffa500;"></span>
+          Females (Non‑Estrus)
+        </label>
+      </div>
+      <div id="reset-container">
+        <button id="resetBrush">Reset Scope</button>
+      </div>
+    </div>
+  </div>
+  <!-- Data type selection buttons -->
+  <div id="button-container">
+    <button id="temp-button">Temperature</button>
+    <button id="activity-button">Activity</button>
+  </div>
+  <!-- Mouse ID selector -->
+  <div id="mouse-selector">
+    <label for="mouse-dropdown">Select a Mouse ID to explore the study:</label>
+    <select id="mouse-dropdown">
+      <option value="1">Mice ID 1</option>
+      <option value="2">Mice ID 2</option>
+      <option value="3">Mice ID 3</option>
+      <option value="4">Mice ID 4</option>
+      <option value="5">Mice ID 5</option>
+      <option value="6">Mice ID 6</option>
+      <option value="7">Mice ID 7</option>
+      <option value="8">Mice ID 8</option>
+      <option value="9">Mice ID 9</option>
+      <option value="10">Mice ID 10</option>
+      <option value="11">Mice ID 11</option>
+      <option value="12">Mice ID 12</option>
+      <option value="13">Mice ID 13</option>
+    </select>
+  </div>
+  <!-- Navigation button to scrollytelling page -->
+  <div id="nav-scroll">
+    <button id="to-scroll">Go to Scrollytelling Graphs</button>
+  </div>
+  <script>
+    document.getElementById('to-scroll').addEventListener('click', () => {
+      window.location.href = 'scroll.html';
+    });
+  </script>
+</body>
+</html>

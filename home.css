@@ -1,0 +1,13 @@
+/* Home page-specific styles */
+#piechart,
+#temp-pie-chart,
+#activity-pie-chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
+}
+#nav-advanced {
+  text-align: right;
+  margin: 20px;
+}
