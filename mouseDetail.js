@@ -28,6 +28,9 @@ xScale.domain([experimentStart, experimentEnd]);
 // Select tooltip element.
 const tooltip = d3.select("#detail-tooltip");
 
+// Global brush variable.
+let brush = d3.brushX().extent([[0, 0], [width, height]]).on("end", brushed);
+
 // ----- Smoothing function -----
 // Applies a moving average with a given window size (in minutes)
 function smoothSeries(data, windowSize) {
@@ -41,10 +44,10 @@ function smoothSeries(data, windowSize) {
 
 // ----- Draw the chart -----
 // This function draws both the male and female lines along with axes, background,
-// brush, tooltip and legend.
+// brush, tooltip and legends.
 function drawChart(maleSeries, femaleSeries) {
-  // Apply smoothing (using a 5-minute window)
-  const windowSize = 5;
+  // Apply further smoothing by using a larger window (15 minutes)
+  const windowSize = 15;
   const smoothedMale = smoothSeries(maleSeries, windowSize);
   const smoothedFemale = smoothSeries(femaleSeries, windowSize);
 
@@ -124,7 +127,7 @@ function drawChart(maleSeries, femaleSeries) {
     .y(d => yScale(d.value))
     .curve(d3.curveMonotoneX);
 
-  // ----- Draw male line (blue) -----
+  // ----- Draw male line (blue) with summary tooltip -----  
   svg.append("path")
     .datum(smoothedMale)
     .attr("class", "male-line")
@@ -132,19 +135,23 @@ function drawChart(maleSeries, femaleSeries) {
     .attr("stroke", "#3690c0")
     .attr("stroke-width", 2)
     .attr("d", line)
-    .on("mouseover", function () {
-      tooltip.style("display", "block")
-             .html(`Male Mouse ${mouseNumber}`);
-    })
-    .on("mousemove", function (event) {
+    .on("mousemove", function(event) {
+      const mouseTime = xScale.invert(d3.pointer(event)[0]);
+      const bisect = d3.bisector(d => d.time).left;
+      const idx = bisect(smoothedMale, mouseTime);
+      const d0 = smoothedMale[idx - 1] || smoothedMale[0];
+      const d1 = smoothedMale[idx] || smoothedMale[smoothedMale.length - 1];
+      const dClosest = mouseTime - d0.time < d1.time - mouseTime ? d0 : d1;
       tooltip.style("left", (event.pageX + 15) + "px")
-             .style("top", (event.pageY - 15) + "px");
+             .style("top", (event.pageY - 15) + "px")
+             .html(`Male Mouse ${mouseNumber}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>Temp: ${d3.format(".2f")(dClosest.value)}°C`);
+      tooltip.style("display", "block");
     })
     .on("mouseout", function () {
       tooltip.style("display", "none");
     });
   
-  // ----- Draw female segments (red for estrus, orange for non-estrus) -----
+  // ----- Draw female segments (red for estrus, orange for non-estrus) with summary tooltip -----
   femaleSegments.forEach(segment => {
     const strokeColor = segment.estrus ? "red" : "orange";
     svg.append("path")
@@ -154,30 +161,33 @@ function drawChart(maleSeries, femaleSeries) {
       .attr("stroke", strokeColor)
       .attr("stroke-width", 2)
       .attr("d", line)
-      .on("mouseover", function () {
-        tooltip.style("display", "block")
-               .html(`Female Mouse ${mouseNumber} ${segment.estrus ? "(Estrus)" : "(Non-Estrus)"}`);
-      })
-      .on("mousemove", function (event) {
+      .on("mousemove", function(event) {
+        const mouseTime = xScale.invert(d3.pointer(event)[0]);
+        const bisect = d3.bisector(d => d.time).left;
+        const idx = bisect(segment.data, mouseTime);
+        const d0 = segment.data[idx - 1] || segment.data[0];
+        const d1 = segment.data[idx] || segment.data[segment.data.length - 1];
+        const dClosest = mouseTime - d0.time < d1.time - mouseTime ? d0 : d1;
         tooltip.style("left", (event.pageX + 15) + "px")
-               .style("top", (event.pageY - 15) + "px");
+               .style("top", (event.pageY - 15) + "px")
+               .html(`Female Mouse ${mouseNumber} ${segment.estrus ? "(Estrus)" : "(Non-Estrus)"}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>Temp: ${d3.format(".2f")(dClosest.value)}°C`);
+        tooltip.style("display", "block");
       })
       .on("mouseout", function () {
         tooltip.style("display", "none");
       });
   });
 
-  // ----- Brush for range selection -----
-  const brush = d3.brushX()
-    .extent([[0, 0], [width, height]])
-    .on("end", brushed);
-  
+  // ----- Add brush for range selection -----
   svg.append("g")
     .attr("class", "brush")
     .call(brush);
-  
-  // Draw the legend.
+
+  // ----- Draw the overall legend in the div -----
   drawLegend();
+
+  // ----- Draw lights on/off legend at top right inside the SVG -----
+  drawLightsLegend();
 }
 
 // ----- Brush callback -----
@@ -186,6 +196,8 @@ function brushed(event) {
   const [x0, x1] = event.selection;
   xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
   redrawChart();
+  // Clear the brush selection so the frame disappears after zooming in.
+  svg.select(".brush").call(brush.move, null);
 }
 
 // ----- Reset brush function -----
@@ -205,7 +217,7 @@ function redrawChart() {
      .duration(750)
      .call(xAxis);
      
-  // Re-draw background rectangles.
+  // Re-draw background.
   redrawBackground();
   
   // Update male and female lines.
@@ -254,34 +266,26 @@ function isEstrus(time) {
   return ((day - 2) % 4 === 0);
 }
 
-// ----- Draw Legend -----
+// ----- Draw Legend (for male/female) ----- 
 function drawLegend() {
   const legendDiv = d3.select("#legend");
-  legendDiv.html(""); // clear previous legend
+  legendDiv.html(""); // Clear previous content.
+  
+  const legendContainer = legendDiv.append("div")
+    .attr("class", "legend-container");
+    
   const legendItems = [
-    { label: "Lights On", color: "white", shape: "rect" },
-    { label: "Lights Off", color: "#d3d3d3", shape: "rect" },
     { label: "Male", color: "#3690c0", shape: "line" },
     { label: "Female (Estrus)", color: "red", shape: "line" },
     { label: "Female (Non-Estrus)", color: "orange", shape: "line" }
   ];
   
   legendItems.forEach(item => {
-    const itemDiv = legendDiv.append("div").attr("class", "legend-item");
-    if (item.shape === "rect") {
-      itemDiv.append("div")
-        .attr("class", "legend-swatch")
-        .style("display", "inline-block")
-        .style("width", "20px")
-        .style("height", "20px")
-        .style("background-color", item.color)
-        .style("margin-right", "5px")
-        .style("border", "1px solid #000");
-    } else if (item.shape === "line") {
+    const itemDiv = legendContainer.append("div").attr("class", "legend-item");
+    if (item.shape === "line") {
       const swatch = itemDiv.append("svg")
         .attr("width", 30)
-        .attr("height", 20)
-        .style("margin-right", "5px");
+        .attr("height", 20);
       swatch.append("line")
         .attr("x1", 0)
         .attr("y1", 10)
@@ -292,6 +296,41 @@ function drawLegend() {
     }
     itemDiv.append("span").text(item.label);
   });
+}
+
+// ----- Draw Lights On/Off Legend (placed at top right of SVG) -----
+function drawLightsLegend() {
+  const legendGroup = svg.append("g")
+      .attr("class", "lights-legend")
+      .attr("transform", `translate(${width - 150}, 10)`);
+  // Lights On
+  legendGroup.append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", 20)
+      .attr("height", 20)
+      .attr("fill", "white")
+      .attr("stroke", "#000");
+  legendGroup.append("text")
+      .attr("x", 25)
+      .attr("y", 15)
+      .text("Lights On")
+      .attr("font-size", "12px")
+      .attr("fill", "#333");
+  // Lights Off
+  legendGroup.append("rect")
+      .attr("x", 0)
+      .attr("y", 25)
+      .attr("width", 20)
+      .attr("height", 20)
+      .attr("fill", "#d3d3d3")
+      .attr("stroke", "#000");
+  legendGroup.append("text")
+      .attr("x", 25)
+      .attr("y", 40)
+      .text("Lights Off")
+      .attr("font-size", "12px")
+      .attr("fill", "#333");
 }
 
 // ----- Data Loading -----
@@ -342,6 +381,8 @@ function updateDimensions() {
   d3.select("#detail-chart svg")
     .attr("width", width + margin.left + margin.right);
   xScale.range([0, width]);
+  // Update brush extent as well.
+  brush.extent([[0, 0], [width, height]]);
   redrawChart();
 }
 window.addEventListener("resize", updateDimensions);
