@@ -88,18 +88,17 @@ function getFinalTickValues(start, end) {
   return ticks;
 }
 function xTickFormat(d) {
-  if (phase === 1) {
-    if (d.getHours() === 0) return d3.timeFormat("%b %d")(d);
-    return d3.timeFormat("%-I %p")(d);
+  const dayNumber = Math.floor((d - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
+  const hours = d.getHours();
+  if (hours === 0) {
+    return `Day ${dayNumber.toString().padStart(2, '0')}`;
   } else {
-    if (d.getHours() === 0) return d3.timeFormat("%b %d")(d);
-    else if (d.getHours() === 12) return "12 PM";
-    else return "";
+    return d3.timeFormat("%H:%M")(d);
   }
 }
 
 let xAxis = d3.axisBottom(xScale)
-    .tickValues(getAnimationTickValues(xScale.domain()[0], xScale.domain()[1]))
+    .tickValues(getAnimationTickValues(experimentStart, experimentEnd))
     .tickFormat(xTickFormat);
 let yAxis = d3.axisLeft(yScale);
 
@@ -415,46 +414,12 @@ function runAnimation(startTime) {
   phase = 1;
   animationTimer = d3.interval(() => {
     currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
+    updateNarrative(currentSimTime); // Update the narrative text
     if (currentSimTime > experimentEnd) {
-      phase = 2;
-      currentSimTime = experimentEnd;
-      updateChart(currentSimTime);
       animationTimer.stop();
-      d3.timeout(() => {
-        phase = 2;
-        xScale.domain([experimentStart, experimentEnd]);
-        gXAxis.transition().duration(1000)
-          .call(xAxis.tickValues(getFinalTickValues(xScale.domain()[0], xScale.domain()[1])).tickFormat(xTickFormat));
-        drawBackground();
-        malePath.datum(smoothedMaleGlobal)
-          .transition().duration(1000)
-          .attrTween("d", function(d) {
-            let previous = d3.select(this).attr("d");
-            let current = lineGenerator(d);
-            return d3.interpolateString(previous, current);
-          });
-        femaleLineGroup.selectAll("path").remove();
-        femaleSegmentsGlobal.forEach(segment => {
-          const path = femaleLineGroup.append("path")
-            .datum(segment.data)
-            .attr("fill", "none")
-            .attr("stroke", segment.estrus ? "red" : "orange")
-            .attr("stroke-width", 2)
-            .attr("d", lineGenerator(segment.data.slice(0, 1)));
-          path.transition().duration(1000)
-              .attrTween("d", function(d) {
-                let previous = d3.select(this).attr("d");
-                let current = lineGenerator(d);
-                return d3.interpolateString(previous, current);
-              });
-        });
-        // Hide pause and skip buttons and show reset scope button.
-        d3.select("#pause-button").style("display", "none");
-        d3.select("#skip-end-button").style("display", "none");
-        d3.select("#reset-scope-button").style("display", "inline-block");
-        // Enable brush for interactive scope selection.
-        enableBrush();
-      }, 500);
+      phase = 2;
+      updateChart(experimentEnd);
+      d3.select("#reset-scope-button").style("display", "block");
     } else {
       updateChart(currentSimTime);
     }
@@ -499,6 +464,7 @@ function skipToEnd() {
   }
   phase = 2;
   currentSimTime = experimentEnd;
+  updateNarrative(currentSimTime); 
   updateChart(currentSimTime);
   d3.timeout(() => {
     phase = 2;
@@ -534,6 +500,7 @@ function skipToEnd() {
     d3.select("#reset-scope-button").style("display", "inline-block");
     enableBrush();
   }, 500);
+
 }
 
 d3.select("#skip-end-button").on("click", () => {
@@ -628,6 +595,12 @@ function updateDimensions() {
     .attr("width", width)
     .attr("height", height);
   gXAxis.attr("transform", `translate(0, ${height})`);
+  svg.select(".x.axis-label")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 10);
+  svg.select(".y.axis-label")
+    .attr("x", -height / 2)
+    .attr("y", -margin.left + 20);
   updateChart(currentSimTime);
 }
 window.addEventListener("resize", updateDimensions);
@@ -655,3 +628,69 @@ d3.select("#back-button").on("click", () => {
 document.getElementById("home-button").addEventListener("click", () => {
   window.location.href = "home.html";
 });
+
+// Function to update the narrative text based on the current simulation time.
+function updateNarrative(currentTime) {
+  const dayNumber = Math.floor((currentTime - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
+  if (dayNumber > 14) { 
+    const maxMaleValue = d3.max(smoothedMaleGlobal, d => d.value);
+    const minMaleValue = d3.min(smoothedMaleGlobal, d => d.value);
+    const maxFemaleValue = d3.max(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
+    const minFemaleValue = d3.min(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
+
+    d3.select("#dynamic-narrative").html(`
+      Currently displaying all data.<br/>
+      Max ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
+      Min ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
+      Max ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
+      Min ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.
+    `);
+  } else {
+    const currentDayMaleData = smoothedMaleGlobal.filter(d => {
+      const day = Math.floor((d.time - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
+      return day === dayNumber;
+    });
+    const currentDayFemaleData = femaleSegmentsGlobal.flatMap(segment => segment.data).filter(d => {
+      const day = Math.floor((d.time - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
+      return day === dayNumber;
+    });
+
+    const maxMaleValue = d3.max(currentDayMaleData, d => d.value);
+    const maxFemaleValue = d3.max(currentDayFemaleData, d => d.value);
+
+    const dataLabel = mode === "activity" ? "activity" : "temperature";
+    const unitLabel = mode === "activity" ? "" : "°C";
+
+    d3.select("#dynamic-narrative").html(`
+      Day ${dayNumber.toString().padStart(2, '0')}<br/> 
+      Max ${dataLabel} from male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${unitLabel}.<br/>
+      Max ${dataLabel} from female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${unitLabel}.
+    `);
+  }
+  
+}
+
+// Append x-axis label
+svg.append("text")
+  .attr("class", "x axis-label")
+  .attr("text-anchor", "middle")
+  .attr("x", width / 2)
+  .attr("y", height + margin.bottom - 10)
+  .text("Day | Time");
+
+// Append y-axis label
+const yAxisLabel = svg.append("text")
+  .attr("class", "y axis-label")
+  .attr("text-anchor", "middle")
+  .attr("transform", "rotate(-90)")
+  .attr("x", -height / 2)
+  .attr("y", -margin.left + 20);
+
+// Update y-axis label based on mode
+function updateYAxisLabel() {
+  const label = mode === "activity" ? "Activity" : "Temperature (°C)";
+  yAxisLabel.text(label);
+}
+
+// Call updateYAxisLabel after setting the mode
+updateYAxisLabel();

@@ -72,9 +72,11 @@ function updatePageTitle() {
   if (currentMode === "temperature") {
     document.querySelector("h1").textContent = "Average Daily Cycle of Body Temperature of Mice";
     document.title = "Advanced Chart - Body Temperature";
+    updateNarrativeText(currentMode);
   } else {
     document.querySelector("h1").textContent = "Average Daily Cycle of Activity of Mice";
     document.title = "Advanced Chart - Activity";
+    updateNarrativeText(currentMode);
   }
 }
 
@@ -593,6 +595,20 @@ function setupDataTypeButtons() {
   });
 }
 
+// Updates narrative text based on current mode
+function updateNarrativeText(currentMode) {
+  const narrativeDiv = document.getElementById("narrative-advanced");
+  narrativeDiv.innerHTML = ""; // Clear existing content
+
+  const p = document.createElement("p");
+  if (currentMode === "temperature") {
+    p.textContent = "This chart shows the average daily cycle of body temperature in mice. The data has been smoothed and aggregated to highlight trends. We can see that on average, the female mice have the highest temperature, especially during estrus. With the light on, temperatures were higher than with the light off, reflecting the impact of circadian rhythm on temperature.";
+  } else {
+    p.textContent = "This chart shows the average daily cycle of activity in mice. The data has been smoothed and aggregated to highlight trends. We can see that on average, female mice during estrus were generally the most active with the light on. This shifts when the light is off, with male mice being slightly more active. Overall, the activity metrics are fairly similar across gender, though the general trend is that male mice have a higher activity level than female mice, which could be indicative of mating behaviors.";
+  }
+  narrativeDiv.appendChild(p);
+}
+
 // -----------------------
 // On DOMContentLoaded, set defaults based on URL parameters.
 document.addEventListener("DOMContentLoaded", () => {
@@ -645,3 +661,5 @@ window.addEventListener("resize", () => {
   updateDimensions();
   svg.select(".brush").call(brush.move, null);
 });
+
+
