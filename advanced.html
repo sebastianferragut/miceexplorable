@@ -6,13 +6,19 @@
   <link rel="stylesheet" href="style.css">           <!-- General styles -->
   <link rel="stylesheet" href="advanced.css">        <!-- Advanced page–specific styles -->
   <!-- Advanced chart code -->
-  <script type="module" src="main.js"></script>
+  <script type="module" src="advanced.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <title>Advanced Chart - Of Mice and Medicine</title>
 </head>
 <body>
+  <!-- Home button -->
+  <button id="home-button" class="home-button">Home</button>
+  
   <h1>Average Daily Cycle of Body Temperature of Mice</h1>
-  <h2> Observe the average body temperature of male, female, and female mice experiencing estrus throughout the day. Explore individual mice by clicking on lines and explore patterns by zooming in on the graph.</h2>
+  <h2>
+    Observe the average body temperature and activity of male, female, and female mice experiencing estrus throughout the day.
+    Explore individual mice by clicking on lines and explore patterns by zooming in on the graph.
+  </h2>
   <!-- Container for advanced chart and controls -->
   <div id="advanced-container">
     <div id="advanced-chart"></div>
@@ -40,8 +46,8 @@
     </div>
   </div>
 
-   <!-- Annotation text -->
-   <p id="summary-annotation">
+  <!-- Annotation text -->
+  <p id="summary-annotation">
     Daily core body temperature and activity levels of mice, recorded over 14 days and smoothed over 30-minute intervals.<br>
   </p>
 
@@ -50,11 +56,5 @@
     <button id="temp-button">Temperature</button>
     <button id="activity-button">Activity</button>
   </div>
-
-  <script>
-    document.getElementById('to-scroll').addEventListener('click', () => {
-      window.location.href = 'scroll.html';
-    });
-  </script>
 </body>
 </html>

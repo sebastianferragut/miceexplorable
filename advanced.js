@@ -1,17 +1,19 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 // ------------------------
-// Advanced Temperature Chart Code
+// Advanced Chart Code (Temperature and Activity)
 // ------------------------
 
-// Global variables for temperature data and state
-let allTempData = [];
+// Global variable for current mode: "temperature" or "activity"
+let currentMode = "temperature";
+
+// Global variables for data and state
+let allData = [];
 let aggregatedMale, aggregatedFemaleEstrus, aggregatedFemaleNonEstrus;
 let expandedGroups = { male: false, estrus: false, "non-estrus": false };
 let selectedFilters = { male: true, estrus: true, "non-estrus": true };
 
 const margin = { top: 30, right: 30, bottom: 60, left: 60 };
-// These dimensions will be computed from the container.
 let width, height;
 let svg, xScale, yScale, xAxis, yAxis;
 let originalXDomain, originalYDomain;
@@ -63,6 +65,17 @@ function getContainerDimensions() {
   };
 }
 
+// Update the document title and header based on the current mode.
+function updatePageTitle() {
+  if (currentMode === "temperature") {
+    document.querySelector("h1").textContent = "Average Daily Cycle of Body Temperature of Mice";
+    document.title = "Advanced Chart - Body Temperature";
+  } else {
+    document.querySelector("h1").textContent = "Average Daily Cycle of Activity of Mice";
+    document.title = "Advanced Chart - Activity";
+  }
+}
+
 // Update chart dimensions using container dimensions.
 function updateDimensions() {
   const dims = getContainerDimensions();
@@ -110,26 +123,36 @@ function updateDimensions() {
   updateChart();
 }
 
-// Load temperature data.
+// Load data based on the current mode (temperature or activity).
 async function loadData() {
-  const [maleTemp, femTemp] = await Promise.all([
-    d3.csv("data/male_temp.csv", rowConverter),
-    d3.csv("data/fem_temp.csv", rowConverter)
+  updatePageTitle();
+  let maleFile, femFile;
+  if (currentMode === "temperature") {
+    maleFile = "data/male_temp.csv";
+    femFile = "data/fem_temp.csv";
+  } else {
+    maleFile = "data/male_act.csv";
+    femFile = "data/fem_act.csv";
+  }
+  
+  const [maleCSV, femCSV] = await Promise.all([
+    d3.csv(maleFile, rowConverter),
+    d3.csv(femFile, rowConverter)
   ]);
   
-  allTempData = [
-    ...processMiceData(maleTemp, "male"),
-    ...processMiceData(femTemp, "female")
+  allData = [
+    ...processMiceData(maleCSV, "male"),
+    ...processMiceData(femCSV, "female")
   ];
   
   // Compute overall y domain.
-  const allTempValues = allTempData.flatMap(d => d.data);
-  globalYDomain = [d3.min(allTempValues), d3.max(allTempValues)];
+  const allValues = allData.flatMap(d => d.data);
+  globalYDomain = [d3.min(allValues), d3.max(allValues)];
   
   // Compute aggregated lines.
-  const maleData = allTempData.filter(d => d.gender === "male");
-  const femaleEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "estrus");
-  const femaleNonEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "non-estrus");
+  const maleData = allData.filter(d => d.gender === "male");
+  const femaleEstrusData = allData.filter(d => d.gender === "female" && d.type === "estrus");
+  const femaleNonEstrusData = allData.filter(d => d.gender === "female" && d.type === "non-estrus");
   
   aggregatedMale = { id: "male_avg", gender: "male", type: "male", data: computeAggregatedLine(maleData) };
   aggregatedFemaleEstrus = { id: "female_estrus_avg", gender: "female", type: "estrus", data: computeAggregatedLine(femaleEstrusData) };
@@ -215,9 +238,9 @@ function smoothData(dataArray, window_size) {
 // Returns the data to display based on filters and expansion state.
 function getChartData() {
   let chartData = [];
-  const maleData = allTempData.filter(d => d.gender === "male");
-  const femaleEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "estrus");
-  const femaleNonEstrusData = allTempData.filter(d => d.gender === "female" && d.type === "non-estrus");
+  const maleData = allData.filter(d => d.gender === "male");
+  const femaleEstrusData = allData.filter(d => d.gender === "female" && d.type === "estrus");
+  const femaleNonEstrusData = allData.filter(d => d.gender === "female" && d.type === "non-estrus");
   
   if (selectedFilters.male) {
     if (!expandedGroups.male) chartData.push(aggregatedMale);
@@ -302,6 +325,15 @@ function initializeChart() {
     .style("fill", "#333")
     .text("Time of Day");
   
+  // Y-axis title.
+  svg.append("text")
+    .attr("class", "y-axis-label")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -margin.left + 15)
+    .attr("x", -height/2)
+    .style("text-anchor", "middle")
+    .text(currentMode === "temperature" ? "Temperature (°C)" : "Activity Level");
+  
   xAxis = svg.append("g")
     .attr("transform", `translate(0,${height})`)
     .call(d3.axisBottom(xScale)
@@ -311,14 +343,6 @@ function initializeChart() {
   
   yAxis = svg.append("g")
     .call(d3.axisLeft(yScale));
-  
-  svg.append("text")
-    .attr("class", "y-axis-label")
-    .attr("transform", "rotate(-90)")
-    .attr("y", -margin.left + 15)
-    .attr("x", -height/2)
-    .style("text-anchor", "middle")
-    .text("Temperature (°C)");
   
   // Light conditions legend inside the chart.
   const lightLegend = svg.append("g")
@@ -548,8 +572,30 @@ function hideTooltip() {
   tooltip.style("opacity", 0);
 }
 
+// Event listeners for data type switching buttons.
+function setupDataTypeButtons() {
+  document.getElementById("temp-button").addEventListener("click", () => {
+    if (currentMode !== "temperature") {
+      currentMode = "temperature";
+      // Remove existing SVG and reload data.
+      d3.select("#advanced-chart").select("svg").remove();
+      loadData();
+    }
+  });
+  
+  document.getElementById("activity-button").addEventListener("click", () => {
+    if (currentMode !== "activity") {
+      currentMode = "activity";
+      // Remove existing SVG and reload data.
+      d3.select("#advanced-chart").select("svg").remove();
+      loadData();
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
+  setupDataTypeButtons();
   // Add event listeners for advanced chart filtering controls.
   d3.select("#maleCheckbox").on("change", function() {
     selectedFilters.male = this.checked;
@@ -564,6 +610,11 @@ document.addEventListener("DOMContentLoaded", () => {
     updateChart();
   });
   d3.select("#resetBrush").on("click", resetBrush);
+  
+  // Home button: route back to advanced.html.
+  document.getElementById("home-button").addEventListener("click", () => {
+    window.location.href = "advanced.html";
+  });
 });
 
 // Resize chart on window resize.
