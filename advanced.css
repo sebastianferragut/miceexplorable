@@ -123,3 +123,40 @@ button:hover {
   color: #8b8686;
   margin-top: 10px;
 }
+
+/* Advanced.css additions */
+#tooltip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10;
+}
+#tooltip.visible {
+  opacity: 1;
+}
+/* advanced.css additions */
+#advanced-chart {
+  min-height: 500px;
+}
+
+#tooltip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10;
+}
+#tooltip.visible {
+  opacity: 1;
+}

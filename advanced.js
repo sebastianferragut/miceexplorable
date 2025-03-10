@@ -11,6 +11,7 @@ let currentMode = "temperature";
 let allData = [];
 let aggregatedMale, aggregatedFemaleEstrus, aggregatedFemaleNonEstrus;
 let expandedGroups = { male: false, estrus: false, "non-estrus": false };
+// Default selected filters (if no URL parameter, show all)
 let selectedFilters = { male: true, estrus: true, "non-estrus": true };
 
 const margin = { top: 30, right: 30, bottom: 60, left: 60 };
@@ -21,12 +22,10 @@ let constantXScale;
 let brush; // Global brush variable
 
 // Create tooltip element inside the advanced chart container.
+// Styling is handled in advanced.css.
 const tooltip = d3.select("#advanced-chart")
   .append("div")
-    .attr("id", "tooltip")
-    .style("position", "absolute")
-    .style("pointer-events", "none")
-    .style("opacity", 0);
+    .attr("id", "tooltip");
 
 const LIGHTS_OFF_COLOR = "rgba(0, 0, 0, 0.1)";
 let globalYDomain;
@@ -57,12 +56,14 @@ const customTimeFormat = d => {
 };
 
 // Helper: Get dimensions from the #advanced-chart container.
-// If clientHeight is 0, default to 500.
+// Ensures a minimum height of 500 pixels.
 function getContainerDimensions() {
   const container = d3.select("#advanced-chart").node();
+  let h = container.clientHeight;
+  if (h < 100) h = 500;
   return {
     width: container.clientWidth,
-    height: container.clientHeight > 0 ? container.clientHeight : 500
+    height: h
   };
 }
 
@@ -93,7 +94,8 @@ function updateDimensions() {
   xAxis.attr("transform", `translate(0,${height})`)
     .call(d3.axisBottom(xScale)
       .tickValues(fullDayTicks)
-      .tickFormat(customTimeFormat));
+      .tickFormat(customTimeFormat)
+    );
   yAxis.call(d3.axisLeft(yScale));
   
   d3.select("#clip rect")
@@ -488,10 +490,9 @@ function updateChart() {
 
 // Modified click handler:
 // If the clicked line is an individual (its id does NOT include "avg"),
-// redirect to the detailed chart page.
+// redirect to the detailed chart page with the current mode.
 function lineClicked(event, d) {
   if (!d.id.includes("avg")) {
-    // Include the current mode in the URL so the detail chart knows which data to load.
     window.location.href = `mouseDetail.html?mouseID=${d.id}&mode=${currentMode}`;
   } else {
     let groupKey;
@@ -537,6 +538,8 @@ function resetBrush() {
       .attr("d", d => lineGenerator(d.data));
 }
 
+// Tooltip functions.
+// Now using event.pageX and event.pageY to position the tooltip near the cursor.
 function showTooltip(event, mouse) {
   const hoveredId = mouse.id;
   d3.selectAll(".mouse-line")
@@ -547,31 +550,28 @@ function showTooltip(event, mouse) {
       .filter(d => d.id !== hoveredId)
       .attr("opacity", 0.5);
   
-  // Position tooltip relative to container.
-  const container = d3.select("#advanced-chart").node();
-  const [x, y] = d3.pointer(event, container);
-  tooltip.style("left", `${x + 15}px`)
-         .style("top", `${y - 15}px`)
-         .style("opacity", 1)
-         .html(`
-            <strong>${mouse.id}</strong><br>
-            Gender: ${mouse.gender}<br>
-            ${mouse.type ? `Type: ${mouse.type.replace("-", " ")}` : ""}
-         `);
+  tooltip
+    .style("left", `${event.pageX + 10}px`)
+    .style("top", `${event.pageY + 10}px`)
+    .html(`
+      <strong>${mouse.id}</strong><br>
+      Gender: ${mouse.gender}<br>
+      ${mouse.type ? `Type: ${mouse.type.replace("-", " ")}` : ""}
+    `)
+    .classed("visible", true);
 }
 
 function moveTooltip(event) {
-  const container = d3.select("#advanced-chart").node();
-  const [x, y] = d3.pointer(event, container);
-  tooltip.style("left", `${x + 15}px`)
-         .style("top", `${y - 15}px`);
+  tooltip
+    .style("left", `${event.pageX + 10}px`)
+    .style("top", `${event.pageY + 10}px`);
 }
 
 function hideTooltip() {
   d3.selectAll(".mouse-line")
       .attr("opacity", 0.7)
       .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5);
-  tooltip.style("opacity", 0);
+  tooltip.classed("visible", false);
 }
 
 // Event listeners for data type switching buttons.
@@ -579,7 +579,6 @@ function setupDataTypeButtons() {
   document.getElementById("temp-button").addEventListener("click", () => {
     if (currentMode !== "temperature") {
       currentMode = "temperature";
-      // Remove existing SVG and reload data.
       d3.select("#advanced-chart").select("svg").remove();
       loadData();
     }
@@ -588,17 +587,39 @@ function setupDataTypeButtons() {
   document.getElementById("activity-button").addEventListener("click", () => {
     if (currentMode !== "activity") {
       currentMode = "activity";
-      // Remove existing SVG and reload data.
       d3.select("#advanced-chart").select("svg").remove();
       loadData();
     }
   });
 }
 
+// -----------------------
+// On DOMContentLoaded, set defaults based on URL parameters.
 document.addEventListener("DOMContentLoaded", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  // Set mode if provided.
+  const modeParam = urlParams.get("mode");
+  if (modeParam) {
+    currentMode = modeParam;
+  }
+  // Set filter defaults and update checkbox states.
+  const filterParam = urlParams.get("filter"); // "male" or "female"
+  if (filterParam === "male") {
+    selectedFilters = { male: true, estrus: false, "non-estrus": false };
+    document.getElementById("maleCheckbox").checked = true;
+    document.getElementById("estrusCheckbox").checked = false;
+    document.getElementById("nonEstrusCheckbox").checked = false;
+  } else if (filterParam === "female") {
+    selectedFilters = { male: false, estrus: true, "non-estrus": true };
+    document.getElementById("maleCheckbox").checked = false;
+    document.getElementById("estrusCheckbox").checked = true;
+    document.getElementById("nonEstrusCheckbox").checked = true;
+  }
+  
   loadData();
   setupDataTypeButtons();
-  // Add event listeners for advanced chart filtering controls.
+  
+  // Add event listeners for filtering checkboxes.
   d3.select("#maleCheckbox").on("change", function() {
     selectedFilters.male = this.checked;
     updateChart();
