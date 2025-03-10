@@ -171,10 +171,10 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .text(`Female Mice ${dataType} Distribution`);
 
     // Legend (for both groups; you can adjust as needed)
-    const legendGroup = svg.append("g")
-        .attr("transform", `translate(${width/2 - 80}, 100)`);
+    const femalelegendGroup = svg.append("g")
+        .attr("transform", `translate(${width - 80}, 100)`);
 
-    legendGroup.selectAll("rect")
+    femalelegendGroup.selectAll("rect")
         .data(uniqueBins)
         .enter()
         .append("rect")
@@ -184,7 +184,29 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .attr("height", 20)
         .attr("fill", (d, i) => femaleColorScale(i));
 
-    legendGroup.selectAll("text")
+    femalelegendGroup.selectAll("text")
+        .data(uniqueBins)
+        .enter()
+        .append("text")
+        .attr("x", 30)
+        .attr("y", (d, i) => i * 20 + 15)
+        .text(d => d)
+        .attr("font-size", "12px");
+
+    const malelegendGroup = svg.append("g")
+        .attr("transform", `translate(${width/2 - 80}, 100)`);
+
+    malelegendGroup.selectAll("rect")
+        .data(uniqueBins)
+        .enter()
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", (d, i) => i * 20)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("fill", (d, i) => maleColorScale(i));
+
+    malelegendGroup.selectAll("text")
         .data(uniqueBins)
         .enter()
         .append("text")
