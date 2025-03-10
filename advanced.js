@@ -57,11 +57,12 @@ const customTimeFormat = d => {
 };
 
 // Helper: Get dimensions from the #advanced-chart container.
+// If clientHeight is 0, default to 500.
 function getContainerDimensions() {
   const container = d3.select("#advanced-chart").node();
   return {
     width: container.clientWidth,
-    height: container.clientHeight
+    height: container.clientHeight > 0 ? container.clientHeight : 500
   };
 }
 
@@ -490,7 +491,8 @@ function updateChart() {
 // redirect to the detailed chart page.
 function lineClicked(event, d) {
   if (!d.id.includes("avg")) {
-    window.location.href = `mouseDetail.html?mouseID=${d.id}`;
+    // Include the current mode in the URL so the detail chart knows which data to load.
+    window.location.href = `mouseDetail.html?mouseID=${d.id}&mode=${currentMode}`;
   } else {
     let groupKey;
     if (d.gender === "male") groupKey = "male";
@@ -611,9 +613,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   d3.select("#resetBrush").on("click", resetBrush);
   
-  // Home button: route back to advanced.html.
+  // Home button: route back to home.html.
   document.getElementById("home-button").addEventListener("click", () => {
-    window.location.href = "advanced.html";
+    window.location.href = "home.html";
   });
 });
 

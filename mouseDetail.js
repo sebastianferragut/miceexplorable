@@ -4,8 +4,9 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 // Set up margins, dimensions, and SVG container.
 const margin = { top: 50, right: 30, bottom: 50, left: 60 };
 let container = d3.select("#detail-chart").node();
+// Instead of using a fixed height, derive it from the container's clientHeight.
 let width = container.clientWidth - margin.left - margin.right;
-let height = 600 - margin.top - margin.bottom;
+let height = container.clientHeight - margin.top - margin.bottom;
 
 const svg = d3.select("#detail-chart")
   .append("svg")
@@ -47,7 +48,7 @@ let yScale = d3.scaleLinear().range([height, 0]);
 
 // A full timeline scale used for scrubbing.
 const fullTimeScale = d3.scaleTime()
-    .domain([new Date(2023, 0, 1, 0, 0), d3.timeMinute.offset(new Date(2023, 0, 1, 0, 0), 14*1440)])
+    .domain([new Date(2023, 0, 1, 0, 0), d3.timeMinute.offset(new Date(2023, 0, 1, 0, 0), 14 * 1440)])
     .range([0, width]);
 
 // -----------------------
@@ -172,23 +173,36 @@ function smoothSeries(data, windowSize) {
 
 // -----------------------
 // Data loading.
+// Read URL parameters.
 const urlParams = new URLSearchParams(window.location.search);
 const mouseID = urlParams.get("mouseID");
+const mode = urlParams.get("mode") || "temperature";
+
 if (!mouseID) {
   d3.select("body").append("p").text("No mouseID specified in URL.");
 } else {
-  // Update the title to include both genders.
+  // Extract mouse number (strip leading letter)
   mouseNumber = mouseID.replace(/^[mf]/i, "");
-  d3.select("#chart-title").text(`Body Temperatures of Male ${mouseNumber} and Female ${mouseNumber}`)
-  d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their body temperature change.`);
-
+  
+  // Update title and subtitle based on mode.
+  if (mode === "activity") {
+    d3.select("#chart-title").text(`Activity Levels of Male ${mouseNumber} and Female ${mouseNumber}`);
+    d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their activity change.`);
+  } else {
+    d3.select("#chart-title").text(`Body Temperatures of Male ${mouseNumber} and Female ${mouseNumber}`);
+    d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their body temperature change.`);
+  }
+  
+  // Determine CSV files based on mode.
+  const maleFile = mode === "activity" ? "data/male_act.csv" : "data/male_temp.csv";
+  const femFile = mode === "activity" ? "data/fem_act.csv" : "data/fem_temp.csv";
   
   const maleKey = "m" + mouseNumber;
   const femaleKey = "f" + mouseNumber;
   
   Promise.all([
-    d3.csv("data/male_temp.csv", rowConverter),
-    d3.csv("data/fem_temp.csv", rowConverter)
+    d3.csv(maleFile, rowConverter),
+    d3.csv(femFile, rowConverter)
   ]).then(([maleDataRaw, femaleDataRaw]) => {
     const maleSeries = maleDataRaw.map((row, i) => ({
       time: d3.timeMinute.offset(experimentStart, i),
@@ -224,7 +238,7 @@ if (!mouseID) {
     
     const allValues = smoothedMaleGlobal.map(d => d.value)
       .concat(smoothedFemale.map(d => d.value));
-    yScale.domain([d3.min(allValues)*0.98, d3.max(allValues)*1.02]);
+    yScale.domain([d3.min(allValues) * 0.98, d3.max(allValues) * 1.02]);
     gYAxis.call(yAxis);
     
     drawLegend();
@@ -266,7 +280,7 @@ function drawLegend() {
   ];
   legendItems.forEach(item => {
     const itemDiv = legendContainer.append("div").attr("class", "legend-item");
-    if(item.shape==="line"){
+    if(item.shape === "line"){
       const swatch = itemDiv.append("svg").attr("width",30).attr("height",20);
       swatch.append("line")
         .attr("x1",0)
@@ -287,7 +301,7 @@ function drawLegend() {
   ];
   lightsLegendItems.forEach(item => {
     const itemDiv = lightsLegendContainer.append("div").attr("class", "legend-item");
-    if(item.shape==="rect"){
+    if(item.shape === "rect"){
       const swatch = itemDiv.append("svg").attr("width",30).attr("height",20);
       swatch.append("rect")
         .attr("width",30)
@@ -306,10 +320,10 @@ function updateChart(currentTime) {
   if (!brushDomainActive) {
     const fixedWindowEnd = d3.timeMinute.offset(experimentStart, windowDurationMinutes);
     let windowStart, windowEnd;
-    if(currentTime < fixedWindowEnd){
+    if (currentTime < fixedWindowEnd) {
       windowStart = experimentStart;
       windowEnd = fixedWindowEnd;
-    } else if(phase === 1){
+    } else if (phase === 1) {
       windowEnd = currentTime;
       windowStart = d3.timeMinute.offset(currentTime, -windowDurationMinutes);
     } else {
@@ -319,7 +333,7 @@ function updateChart(currentTime) {
     xScale.domain([windowStart, windowEnd]);
   }
   
-  if(phase === 1){
+  if (phase === 1) {
     xAxis.tickValues(getAnimationTickValues(xScale.domain()[0], xScale.domain()[1]))
          .tickFormat(xTickFormat);
   } else {
@@ -330,12 +344,16 @@ function updateChart(currentTime) {
   drawBackground();
   
   let filterStart, filterEnd;
-  if(brushDomainActive) {
+  if (brushDomainActive) {
     [filterStart, filterEnd] = xScale.domain();
   } else {
     filterStart = experimentStart;
-    filterEnd = currentSimTime;
+    filterEnd = currentTime;
   }
+  
+  // Define tooltip labels based on mode.
+  const dataLabel = mode === "activity" ? "Activity" : "Temp";
+  const unitLabel = mode === "activity" ? "" : "°C";
   
   const filteredMale = smoothedMaleGlobal.filter(d => d.time >= filterStart && d.time <= filterEnd);
   malePath.datum(filteredMale)
@@ -348,9 +366,9 @@ function updateChart(currentTime) {
       const d1 = filteredMale[idx] || filteredMale[filteredMale.length - 1];
       const dClosest = mouseTime - d0.time < d1.time - mouseTime ? d0 : d1;
       d3.select("#detail-tooltip")
-        .style("left", (event.pageX+15)+"px")
-        .style("top", (event.pageY-15)+"px")
-        .html(`Male Mouse ${mouseNumber}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>Temp: ${d3.format(".2f")(dClosest.value)}°C`)
+        .style("left", (event.pageX + 15) + "px")
+        .style("top", (event.pageY - 15) + "px")
+        .html(`Male Mouse ${mouseNumber}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>${dataLabel}: ${d3.format(".2f")(dClosest.value)}${unitLabel}`)
         .style("display", "block");
     })
     .on("mouseout", () => {
@@ -360,7 +378,7 @@ function updateChart(currentTime) {
   femaleLineGroup.selectAll("path").remove();
   femaleSegmentsGlobal.forEach(segment => {
     const filteredSegment = segment.data.filter(d => d.time >= filterStart && d.time <= filterEnd);
-    if(filteredSegment.length > 0){
+    if (filteredSegment.length > 0) {
       femaleLineGroup.append("path")
         .datum(filteredSegment)
         .attr("fill", "none")
@@ -375,9 +393,9 @@ function updateChart(currentTime) {
           const d1 = filteredSegment[idx] || filteredSegment[filteredSegment.length - 1];
           const dClosest = mouseTime - d0.time < d1.time - mouseTime ? d0 : d1;
           d3.select("#detail-tooltip")
-            .style("left", (event.pageX+15)+"px")
-            .style("top", (event.pageY-15)+"px")
-            .html(`Female Mouse ${mouseNumber} ${segment.estrus?"(Estrus)":"(Non-Estrus)"}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>Temp: ${d3.format(".2f")(dClosest.value)}°C`)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px")
+            .html(`Female Mouse ${mouseNumber} ${segment.estrus ? "(Estrus)" : "(Non-Estrus)"}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>${dataLabel}: ${d3.format(".2f")(dClosest.value)}${unitLabel}`)
             .style("display", "block");
         })
         .on("mouseout", () => {
@@ -397,7 +415,7 @@ function runAnimation(startTime) {
   phase = 1;
   animationTimer = d3.interval(() => {
     currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
-    if(currentSimTime > experimentEnd){
+    if (currentSimTime > experimentEnd) {
       phase = 2;
       currentSimTime = experimentEnd;
       updateChart(currentSimTime);
@@ -422,7 +440,7 @@ function runAnimation(startTime) {
             .attr("fill", "none")
             .attr("stroke", segment.estrus ? "red" : "orange")
             .attr("stroke-width", 2)
-            .attr("d", lineGenerator(segment.data.slice(0,1)));
+            .attr("d", lineGenerator(segment.data.slice(0, 1)));
           path.transition().duration(1000)
               .attrTween("d", function(d) {
                 let previous = d3.select(this).attr("d");
@@ -452,7 +470,7 @@ function resumeAnimation() {
 }
 
 function pauseAnimation() {
-  if(animationTimer) {
+  if (animationTimer) {
     animationTimer.stop();
     animationTimer = null;
   }
@@ -461,7 +479,7 @@ function pauseAnimation() {
 // -----------------------
 // Pause/Resume button.
 d3.select("#pause-button").on("click", () => {
-  if(!isPaused) {
+  if (!isPaused) {
     pauseAnimation();
     isPaused = true;
     d3.select("#pause-button").text("Resume");
@@ -475,7 +493,7 @@ d3.select("#pause-button").on("click", () => {
 // -----------------------
 // Skip to End button.
 function skipToEnd() {
-  if(animationTimer) {
+  if (animationTimer) {
     animationTimer.stop();
     animationTimer = null;
   }
@@ -502,7 +520,7 @@ function skipToEnd() {
         .attr("fill", "none")
         .attr("stroke", segment.estrus ? "red" : "orange")
         .attr("stroke-width", 2)
-        .attr("d", lineGenerator(segment.data.slice(0,1)));
+        .attr("d", lineGenerator(segment.data.slice(0, 1)));
       path.transition().duration(1000)
           .attrTween("d", function(d) {
             let previous = d3.select(this).attr("d");
@@ -548,7 +566,7 @@ function addScrubOverlay() {
 
 function scrubStart(event) {
   isScrubbing = true;
-  if(!isPaused) {
+  if (!isPaused) {
     pauseAnimation();
     isPaused = true;
     d3.select("#pause-button").text("Resume");
@@ -556,7 +574,7 @@ function scrubStart(event) {
 }
 
 function scrubMove(event) {
-  if(isScrubbing) {
+  if (isScrubbing) {
     const [x] = d3.pointer(event);
     currentSimTime = fullTimeScale.invert(x);
     updateChart(currentSimTime);
@@ -574,7 +592,7 @@ let brush = d3.brushX()
   .on("end", brushed);
 function enableBrush() {
   if (phase === 2) {
-    if(svg.select(".brush-group").empty()){
+    if (svg.select(".brush-group").empty()) {
       svg.append("g")
          .attr("class", "brush-group")
          .call(brush);
@@ -584,7 +602,7 @@ function enableBrush() {
   }
 }
 function brushed(event) {
-  if(!event.selection) return;
+  if (!event.selection) return;
   brushDomainActive = true;
   const [x0, x1] = event.selection;
   xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
@@ -596,14 +614,19 @@ function brushed(event) {
 
 // -----------------------
 // Responsive resize.
+// Update both width and height based on the container.
 function updateDimensions() {
   container = d3.select("#detail-chart").node();
   width = container.clientWidth - margin.left - margin.right;
+  height = container.clientHeight - margin.top - margin.bottom;
   d3.select("#detail-chart svg")
-    .attr("width", width + margin.left + margin.right);
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
   xScale.range([0, width]);
   fullTimeScale.range([0, width]);
-  svg.select("#clip rect").attr("width", width);
+  svg.select("#clip rect")
+    .attr("width", width)
+    .attr("height", height);
   gXAxis.attr("transform", `translate(0, ${height})`);
   updateChart(currentSimTime);
 }
@@ -625,4 +648,10 @@ d3.select("#resetBrushDetail").on("click", () => {
 });
 d3.select("#back-button").on("click", () => {
   window.location.href = "advanced.html";
+});
+
+// -----------------------
+// Home button: redirect to home.html.
+document.getElementById("home-button").addEventListener("click", () => {
+  window.location.href = "home.html";
 });
