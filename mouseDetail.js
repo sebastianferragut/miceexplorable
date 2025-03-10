@@ -7,7 +7,6 @@ let container = d3.select("#detail-chart").node();
 let width = container.clientWidth - margin.left - margin.right;
 let height = 600 - margin.top - margin.bottom;
 
-// Main SVG and group translated by margins.
 const svg = d3.select("#detail-chart")
   .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -46,7 +45,7 @@ const gYAxis = svg.append("g")
 let xScale = d3.scaleTime().range([0, width]);
 let yScale = d3.scaleLinear().range([height, 0]);
 
-// A constant full–timeline scale used for scrubbing.
+// A full timeline scale used for scrubbing.
 const fullTimeScale = d3.scaleTime()
     .domain([new Date(2023, 0, 1, 0, 0), d3.timeMinute.offset(new Date(2023, 0, 1, 0, 0), 14*1440)])
     .range([0, width]);
@@ -64,8 +63,11 @@ xScale.domain([experimentStart, experimentEnd]); // full domain
 let phase = 1; // 1: animation phase, 2: final/zoom–out phase
 
 // -----------------------
+// Global flag to detect when the brush (interactive panning) is active.
+let brushDomainActive = false;
+
+// -----------------------
 // Custom Tick Functions.
-// During animation (phase 1): ticks every day and every 3 hours.
 function getAnimationTickValues(start, end) {
   let ticks = d3.timeHour.every(3).range(start, end);
   let dayTicks = d3.timeDay.every(1).range(start, end);
@@ -73,7 +75,6 @@ function getAnimationTickValues(start, end) {
   ticks.sort((a, b) => a - b);
   return ticks;
 }
-// Final state (phase 2): ticks at every day (midnight) and at 12:00 PM.
 function getFinalTickValues(start, end) {
   let dayTicks = d3.timeDay.every(1).range(start, end);
   let noonTicks = d3.timeDay.every(1).range(start, end).map(d => {
@@ -85,7 +86,6 @@ function getFinalTickValues(start, end) {
   ticks.sort((a, b) => a - b);
   return ticks;
 }
-// Tick formatter changes with phase.
 function xTickFormat(d) {
   if (phase === 1) {
     if (d.getHours() === 0) return d3.timeFormat("%b %d")(d);
@@ -97,13 +97,11 @@ function xTickFormat(d) {
   }
 }
 
-// The xAxis will be updated with different tick values later.
 let xAxis = d3.axisBottom(xScale)
     .tickValues(getAnimationTickValues(xScale.domain()[0], xScale.domain()[1]))
     .tickFormat(xTickFormat);
 let yAxis = d3.axisLeft(yScale);
 
-// Append initial axes.
 gXAxis.call(xAxis);
 gYAxis.call(yAxis);
 
@@ -143,8 +141,6 @@ function drawBackground() {
     const sixAM = d3.timeHour.offset(dayStart, 6);
     const sixPM = d3.timeHour.offset(dayStart, 18);
     const nextDay = d3.timeDay.offset(dayStart, 1);
-    
-    // Lights off: from dayStart to 6AM.
     gBackground.append("rect")
       .attr("class", "background")
       .attr("x", xScale(dayStart))
@@ -152,8 +148,6 @@ function drawBackground() {
       .attr("width", xScale(sixAM) - xScale(dayStart))
       .attr("height", height)
       .attr("fill", "#d3d3d3");
-    
-    // Lights off: from 6PM to nextDay.
     gBackground.append("rect")
       .attr("class", "background")
       .attr("x", xScale(sixPM))
@@ -183,11 +177,14 @@ const mouseID = urlParams.get("mouseID");
 if (!mouseID) {
   d3.select("body").append("p").text("No mouseID specified in URL.");
 } else {
+  // Update the title to include both genders.
   mouseNumber = mouseID.replace(/^[mf]/i, "");
+  d3.select("#chart-title").text(`Body Temperatures of Male ${mouseNumber} and Female ${mouseNumber}`)
+  d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their body temperature change.`);
+
+  
   const maleKey = "m" + mouseNumber;
   const femaleKey = "f" + mouseNumber;
-  
-  d3.select("#chart-title").text(`Mouse Detail Chart: Mouse ${mouseNumber}`);
   
   Promise.all([
     d3.csv("data/male_temp.csv", rowConverter),
@@ -225,19 +222,18 @@ if (!mouseID) {
       femaleSegmentsGlobal.push({ estrus: currentEstrus, data: currentSegment });
     }
     
-    // Set yScale domain.
     const allValues = smoothedMaleGlobal.map(d => d.value)
       .concat(smoothedFemale.map(d => d.value));
     yScale.domain([d3.min(allValues)*0.98, d3.max(allValues)*1.02]);
     gYAxis.call(yAxis);
     
-    // Draw legends.
     drawLegend();
     
-    // Start the animation.
-    startAnimation();
+    // Remove any existing brush and disable brush mode during animation.
+    svg.select(".brush-group").remove();
+    brushDomainActive = false;
     
-    // Enable scrubbing over the chart.
+    startAnimation();
     addScrubOverlay();
   });
 }
@@ -250,18 +246,17 @@ function rowConverter(d) {
 
 function isEstrus(time) {
   const diff = time - experimentStart;
-  const minutes = diff/(1000*60);
-  const day = Math.floor(minutes/1440)+1;
-  return ((day-2)%4===0);
+  const minutes = diff / (1000 * 60);
+  const day = Math.floor(minutes / 1440) + 1;
+  return ((day - 2) % 4 === 0);
 }
 
 // -----------------------
-// Legend drawing: mouse lines then lights.
+// Legend drawing.
 function drawLegend() {
   const legendDiv = d3.select("#legend");
-  legendDiv.html(""); // clear previous content
+  legendDiv.html("");
   
-  // Legend for mouse lines.
   const legendContainer = legendDiv.append("div")
     .attr("class", "legend-container");
   const legendItems = [
@@ -284,7 +279,6 @@ function drawLegend() {
     itemDiv.append("span").text(item.label);
   });
   
-  // Legend for lights.
   const lightsLegendContainer = legendDiv.append("div")
     .attr("class", "legend-container lights-legend");
   const lightsLegendItems = [
@@ -306,23 +300,25 @@ function drawLegend() {
 }
 
 // -----------------------
-// Update the chart for a given simulated time.
+// Update chart for a given simulation time.
+// When brush mode is active, filter data using xScale.domain(); otherwise use currentSimTime.
 function updateChart(currentTime) {
-  let windowStart, windowEnd;
-  const fixedWindowEnd = d3.timeMinute.offset(experimentStart, windowDurationMinutes);
-  if(currentTime < fixedWindowEnd){
-    windowStart = experimentStart;
-    windowEnd = fixedWindowEnd;
-  } else if(phase === 1){
-    windowEnd = currentTime;
-    windowStart = d3.timeMinute.offset(currentTime, -windowDurationMinutes);
-  } else {
-    windowStart = experimentStart;
-    windowEnd = experimentEnd;
+  if (!brushDomainActive) {
+    const fixedWindowEnd = d3.timeMinute.offset(experimentStart, windowDurationMinutes);
+    let windowStart, windowEnd;
+    if(currentTime < fixedWindowEnd){
+      windowStart = experimentStart;
+      windowEnd = fixedWindowEnd;
+    } else if(phase === 1){
+      windowEnd = currentTime;
+      windowStart = d3.timeMinute.offset(currentTime, -windowDurationMinutes);
+    } else {
+      windowStart = experimentStart;
+      windowEnd = experimentEnd;
+    }
+    xScale.domain([windowStart, windowEnd]);
   }
-  xScale.domain([windowStart, windowEnd]);
   
-  // Update ticks based on phase.
   if(phase === 1){
     xAxis.tickValues(getAnimationTickValues(xScale.domain()[0], xScale.domain()[1]))
          .tickFormat(xTickFormat);
@@ -333,8 +329,15 @@ function updateChart(currentTime) {
   gXAxis.call(xAxis);
   drawBackground();
   
-  // Update male line.
-  const filteredMale = smoothedMaleGlobal.filter(d => d.time <= currentTime);
+  let filterStart, filterEnd;
+  if(brushDomainActive) {
+    [filterStart, filterEnd] = xScale.domain();
+  } else {
+    filterStart = experimentStart;
+    filterEnd = currentSimTime;
+  }
+  
+  const filteredMale = smoothedMaleGlobal.filter(d => d.time >= filterStart && d.time <= filterEnd);
   malePath.datum(filteredMale)
     .attr("d", lineGenerator)
     .on("mousemove", function(event) {
@@ -354,10 +357,9 @@ function updateChart(currentTime) {
       d3.select("#detail-tooltip").style("display", "none");
     });
   
-  // Update female segments.
   femaleLineGroup.selectAll("path").remove();
   femaleSegmentsGlobal.forEach(segment => {
-    const filteredSegment = segment.data.filter(d => d.time <= currentTime);
+    const filteredSegment = segment.data.filter(d => d.time >= filterStart && d.time <= filterEnd);
     if(filteredSegment.length > 0){
       femaleLineGroup.append("path")
         .datum(filteredSegment)
@@ -388,23 +390,24 @@ function updateChart(currentTime) {
 // -----------------------
 // Animation loop functions.
 function runAnimation(startTime) {
+  svg.select(".brush-group").remove();
+  brushDomainActive = false;
+  
   currentSimTime = startTime;
   phase = 1;
   animationTimer = d3.interval(() => {
-    currentSimTime = d3.timeMinute.offset(currentSimTime, 20); // 20-minute increment per tick
+    currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
     if(currentSimTime > experimentEnd){
       phase = 2;
       currentSimTime = experimentEnd;
       updateChart(currentSimTime);
       animationTimer.stop();
-      // After a brief pause, perform a smooth zoom-out.
       d3.timeout(() => {
         phase = 2;
         xScale.domain([experimentStart, experimentEnd]);
         gXAxis.transition().duration(1000)
           .call(xAxis.tickValues(getFinalTickValues(xScale.domain()[0], xScale.domain()[1])).tickFormat(xTickFormat));
         drawBackground();
-        // Smooth transition for male line.
         malePath.datum(smoothedMaleGlobal)
           .transition().duration(1000)
           .attrTween("d", function(d) {
@@ -412,7 +415,6 @@ function runAnimation(startTime) {
             let current = lineGenerator(d);
             return d3.interpolateString(previous, current);
           });
-        // Smooth transition for female segments.
         femaleLineGroup.selectAll("path").remove();
         femaleSegmentsGlobal.forEach(segment => {
           const path = femaleLineGroup.append("path")
@@ -428,7 +430,11 @@ function runAnimation(startTime) {
                 return d3.interpolateString(previous, current);
               });
         });
-        // Enable brush (panning) after zoom–out.
+        // Hide pause and skip buttons and show reset scope button.
+        d3.select("#pause-button").style("display", "none");
+        d3.select("#skip-end-button").style("display", "none");
+        d3.select("#reset-scope-button").style("display", "inline-block");
+        // Enable brush for interactive scope selection.
         enableBrush();
       }, 500);
     } else {
@@ -467,9 +473,67 @@ d3.select("#pause-button").on("click", () => {
 });
 
 // -----------------------
+// Skip to End button.
+function skipToEnd() {
+  if(animationTimer) {
+    animationTimer.stop();
+    animationTimer = null;
+  }
+  phase = 2;
+  currentSimTime = experimentEnd;
+  updateChart(currentSimTime);
+  d3.timeout(() => {
+    phase = 2;
+    xScale.domain([experimentStart, experimentEnd]);
+    gXAxis.transition().duration(1000)
+      .call(xAxis.tickValues(getFinalTickValues(xScale.domain()[0], xScale.domain()[1])).tickFormat(xTickFormat));
+    drawBackground();
+    malePath.datum(smoothedMaleGlobal)
+      .transition().duration(1000)
+      .attrTween("d", function(d) {
+        let previous = d3.select(this).attr("d");
+        let current = lineGenerator(d);
+        return d3.interpolateString(previous, current);
+      });
+    femaleLineGroup.selectAll("path").remove();
+    femaleSegmentsGlobal.forEach(segment => {
+      const path = femaleLineGroup.append("path")
+        .datum(segment.data)
+        .attr("fill", "none")
+        .attr("stroke", segment.estrus ? "red" : "orange")
+        .attr("stroke-width", 2)
+        .attr("d", lineGenerator(segment.data.slice(0,1)));
+      path.transition().duration(1000)
+          .attrTween("d", function(d) {
+            let previous = d3.select(this).attr("d");
+            let current = lineGenerator(d);
+            return d3.interpolateString(previous, current);
+          });
+    });
+    // Hide pause and skip buttons and show reset scope button.
+    d3.select("#pause-button").style("display", "none");
+    d3.select("#skip-end-button").style("display", "none");
+    d3.select("#reset-scope-button").style("display", "inline-block");
+    enableBrush();
+  }, 500);
+}
+
+d3.select("#skip-end-button").on("click", () => {
+  skipToEnd();
+});
+
+// -----------------------
+// Reset Scope button for brushing.
+d3.select("#reset-scope-button").on("click", () => {
+  brushDomainActive = false;
+  xScale.domain([experimentStart, experimentEnd]);
+  gXAxis.transition().duration(750).call(xAxis);
+  updateChart(currentSimTime);
+});
+
+// -----------------------
 // Scrubbing functionality.
 function addScrubOverlay() {
-  // Append a transparent rect to capture mouse events.
   gClip.append("rect")
     .attr("class", "scrub-overlay")
     .attr("width", width)
@@ -484,7 +548,6 @@ function addScrubOverlay() {
 
 function scrubStart(event) {
   isScrubbing = true;
-  // If animation is running, pause it.
   if(!isPaused) {
     pauseAnimation();
     isPaused = true;
@@ -494,7 +557,6 @@ function scrubStart(event) {
 
 function scrubMove(event) {
   if(isScrubbing) {
-    // Use fullTimeScale so scrubbing maps across the entire experiment.
     const [x] = d3.pointer(event);
     currentSimTime = fullTimeScale.invert(x);
     updateChart(currentSimTime);
@@ -506,29 +568,29 @@ function scrubEnd(event) {
 }
 
 // -----------------------
-// Brush for selecting a scope of time (enabled after zoom–out).
+// Brush for selecting a time scope (only enabled after animation).
 let brush = d3.brushX()
   .extent([[0, 0], [width, height]])
   .on("end", brushed);
 function enableBrush() {
-  // Append brush group if not already.
-  if(svg.select(".brush-group").empty()){
-    svg.append("g")
-       .attr("class", "brush-group")
-       .call(brush);
-  } else {
-    svg.select(".brush-group").call(brush);
+  if (phase === 2) {
+    if(svg.select(".brush-group").empty()){
+      svg.append("g")
+         .attr("class", "brush-group")
+         .call(brush);
+    } else {
+      svg.select(".brush-group").call(brush);
+    }
   }
 }
 function brushed(event) {
   if(!event.selection) return;
+  brushDomainActive = true;
   const [x0, x1] = event.selection;
   xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
   gXAxis.transition().duration(750).call(xAxis);
-  // Redraw background and data.
   drawBackground();
   updateChart(currentSimTime);
-  // Remove brush selection.
   svg.select(".brush-group").call(brush.move, null);
 }
 
@@ -548,15 +610,19 @@ function updateDimensions() {
 window.addEventListener("resize", updateDimensions);
 
 // -----------------------
-// Reset button and back button.
+// Reset Animation and Back buttons.
 d3.select("#resetBrushDetail").on("click", () => {
   pauseAnimation();
   isPaused = false;
-  d3.select("#pause-button").text("Pause");
+  d3.select("#pause-button").text("Pause").style("display", "inline-block");
+  d3.select("#skip-end-button").style("display", "inline-block");
+  d3.select("#reset-scope-button").style("display", "none");
   currentSimTime = experimentStart;
   phase = 1;
+  svg.select(".brush-group").remove();
+  brushDomainActive = false;
   startAnimation();
 });
 d3.select("#back-button").on("click", () => {
-  window.location.href = "home.html";
+  window.location.href = "advanced.html";
 });

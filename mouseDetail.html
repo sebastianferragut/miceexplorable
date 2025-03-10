@@ -3,17 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ID Mice Body Temperature</title>
+  <title>Body Temperatures</title>
   <link rel="stylesheet" href="mouseDetail.css">
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script type="module" src="mouseDetail.js"></script>
 </head>
 <body>
-  <h1 id="chart-title">Body Temperatures of </h1>
+  <!-- The title will be updated by the JS to include the mouse ID -->
+  <h1 id="chart-title">Body Temperatures</h1>
+  <h2 id="subheader">Follow male{ID.number} and female{ID.number} throughout the course of the experiment and watch their body temperature change.</h2>
   <div id="detail-chart"></div>
   <div id="controls">
-    <button id="resetBrushDetail">Reset Animation</button>
+    <button id="resetBrushDetail">Restart Animation</button>
     <button id="pause-button">Pause</button>
+    <button id="skip-end-button">Skip to End</button>
+    <!-- This button is hidden initially and will appear after animation finishes -->
+    <button id="reset-scope-button" style="display: none;">Reset Scope</button>
     <button id="back-button">Back to All Mice</button>
   </div>
   <div id="legend"></div>
