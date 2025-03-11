@@ -61,6 +61,38 @@
         window.location.href = 'advanced.html';
       });
     </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const transitionElement = document.createElement("div");
+    transitionElement.classList.add("page-transition");
+
+    // Add image inside the transition div
+    const image = document.createElement("img");
+    image.src = "imgs/mice.svg"; // Replace with your image path
+    image.alt = "Loading...";
+    
+    transitionElement.appendChild(image);
+    document.body.appendChild(transitionElement);
+
+    setTimeout(() => {
+      transitionElement.classList.add("hidden");
+    }, 200); // Fade out faster
+
+    document.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const href = link.getAttribute("href");
+
+        transitionElement.classList.remove("hidden");
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 200);
+      });
+    });
+  });
+</script>
 </body>
 
 </html>

@@ -42,7 +42,7 @@ h1 {
 button {
     padding: 10px 20px;
     margin: 5px;
-    background-color: #007bff;
+    background-color: #a6a6a6;
     color: white;
     border: none;
     border-radius: 5px;
@@ -51,8 +51,23 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #575757;
 }
+
+.home-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    background-color: #a6a6a6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .home-button:hover {
+    background-color: #575757;
+  }
 
 #legend {
     margin-top: 15px;
