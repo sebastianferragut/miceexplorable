@@ -286,7 +286,7 @@ function updateScrollContent(temperatureData, activityData) {
                 Temp Avg (F): ${tempAverages.femaleAvg}°C<br>
                 Temp Avg (M): ${tempAverages.maleAvg}°C
             </div>
-            <div class="activity" style="color: lightblue;">
+            <div class="activity" style="color: green;">
                 Activity Avg (F): ${actAverages.femaleAvg}<br>
                 Activity Avg (M): ${actAverages.maleAvg}
             </div>`;

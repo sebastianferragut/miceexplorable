@@ -274,7 +274,7 @@ function drawLegend() {
     .attr("class", "legend-container");
   const legendItems = [
     { label: "Male", color: "lightblue", shape: "line" },
-    { label: "Female (Estrus)", color: "#fc5b7e", shape: "line" },
+    { label: "Female (Estrus)", color: "#d93d5f", shape: "line" },
     { label: "Female (Non-Estrus)", color: "lightpink", shape: "line" }
   ];
   legendItems.forEach(item => {
@@ -381,7 +381,7 @@ function updateChart(currentTime) {
       femaleLineGroup.append("path")
         .datum(filteredSegment)
         .attr("fill", "none")
-        .attr("stroke", segment.estrus ? "#fc5b7e" : "pink")
+        .attr("stroke", segment.estrus ? "#d93d5f" : "pink")
         .attr("stroke-width", 2)
         .attr("d", lineGenerator)
         .on("mousemove", function(event) {
@@ -484,7 +484,7 @@ function skipToEnd() {
       const path = femaleLineGroup.append("path")
         .datum(segment.data)
         .attr("fill", "none")
-        .attr("stroke", segment.estrus ? "#fc5b7e" : "lightpink")
+        .attr("stroke", segment.estrus ? "#d93d5f" : "lightpink")
         .attr("stroke-width", 2)
         .attr("d", lineGenerator(segment.data.slice(0, 1)));
       path.transition().duration(1000)

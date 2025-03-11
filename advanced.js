@@ -449,7 +449,7 @@ function updateChart() {
 
   const colorScale = d3.scaleOrdinal()
     .domain(["male", "estrus", "non-estrus"])
-    .range(["lightblue", "#fc5b7e", "lightpink"]);
+    .range(["lightblue", "#d93d5f", "lightpink"]);
   
   // Always show full global range.
   yScale.domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02]);
@@ -482,7 +482,7 @@ function updateChart() {
           .attr("d", d => lineGenerator(d.data))
           .attr("stroke", d => {
               if (d.gender === "male") return "lightblue";
-              return d.type === "estrus" ? "#fc5b7e" : "lightpink";
+              return d.type === "estrus" ? "#d93d5f" : "lightpink";
           })
           .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
           .attr("opacity", 0.7);
