@@ -93,8 +93,33 @@ button:hover {
 .legend-item {
   display: flex;
   align-items: center;
-  font-size: 14px;
-  margin: 5px;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.legend-item input {
+  display: none;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  border-radius: 50%;
+  background-color: #ccc;
+  transition: background-color 0.3s ease;
+}
+
+#maleCheckbox:checked + .legend-color {
+  background-color: lightblue;
+}
+
+#estrusCheckbox:checked + .legend-color {
+  background-color: #d93d5f;
+}
+
+#nonEstrusCheckbox:checked + .legend-color {
+  background-color: lightpink;
 }
 
 .legend-swatch {
