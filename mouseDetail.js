@@ -639,11 +639,12 @@ function updateNarrative(currentTime) {
     const minFemaleValue = d3.min(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
 
     d3.select("#dynamic-narrative").html(`
+      </br>
       Currently displaying all data.<br/>
-      Max ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Min ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Max ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Min ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.
+      Maximum ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
+      Minimum ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
+      Maximum ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
+      Minimum ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.
     `);
   } else {
     const currentDayMaleData = smoothedMaleGlobal.filter(d => {
@@ -657,14 +658,18 @@ function updateNarrative(currentTime) {
 
     const maxMaleValue = d3.max(currentDayMaleData, d => d.value);
     const maxFemaleValue = d3.max(currentDayFemaleData, d => d.value);
+    const minMaleValue = d3.min(currentDayMaleData, d => d.value);
+    const minFemaleValue = d3.min(currentDayFemaleData, d => d.value);
 
     const dataLabel = mode === "activity" ? "activity" : "temperature";
     const unitLabel = mode === "activity" ? "" : "°C";
 
-    d3.select("#dynamic-narrative").html(`
+    d3.select("#dynamic-narrative").html(`<br/>
       Day ${dayNumber.toString().padStart(2, '0')}<br/> 
-      Max ${dataLabel} from male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${unitLabel}.<br/>
-      Max ${dataLabel} from female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${unitLabel}.
+      Current maximum ${dataLabel} from male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${unitLabel}.<br/>
+      Current minimum ${dataLabel} from male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${unitLabel}.<br/>
+      Current maximum ${dataLabel} from female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${unitLabel}.<br/>
+      Current minimum ${dataLabel} from female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${unitLabel}.
     `);
   }
   
