@@ -62,7 +62,7 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
     const uniqueBins = Object.keys(femaleBins);
     const colorScale = dataType === "Activity" ? d3.scaleLinear()
     .domain([0, uniqueBins.length])
-    .range(["lightblue", "blue"]):d3.scaleLinear()
+    .range(["lightgreen", "green"]):d3.scaleLinear()
         .domain([0, uniqueBins.length])
         .range(["yellow", "red"]);
     
