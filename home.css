@@ -1,3 +1,6 @@
+body {
+  margin-inline: 10%;
+}
 /* Home page-specific styles */
 #piechart,
 #temp-pie-chart,
@@ -10,4 +13,9 @@
 #nav-advanced {
   text-align: right;
   margin: 20px;
+}
+#img-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
