@@ -355,7 +355,7 @@ function scrollChart(data, chartType) {
             .attr("stroke-width", 1.5)
             .attr("opacity", 0.7)
             .attr("d", d => lineGenerator(d))
-            .attr("stroke", "#a6cee3");
+            .attr("stroke", "lightblue");
     
     // Draw lines for females
     svg.selectAll(".mouse-line-female")
@@ -368,7 +368,7 @@ function scrollChart(data, chartType) {
             .attr("stroke-width", 1.5)
             .attr("opacity", 0.7)
             .attr("d", d => lineGenerator(d))
-            .attr("stroke", "#fac1c0");
+            .attr("stroke", "#lightpink");
 }
 
 // TODO: Add tooltip functions and incorporate them into scrollChart

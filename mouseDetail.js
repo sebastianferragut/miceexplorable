@@ -120,7 +120,7 @@ let isScrubbing = false;
 const malePath = gData.append("path")
   .attr("class", "male-line")
   .attr("fill", "none")
-  .attr("stroke", "#3690c0")
+  .attr("stroke", "lightblue")
   .attr("stroke-width", 2);
 const femaleLineGroup = gData.append("g")
   .attr("class", "female-line-group");
@@ -147,14 +147,14 @@ function drawBackground() {
       .attr("y", 0)
       .attr("width", xScale(sixAM) - xScale(dayStart))
       .attr("height", height)
-      .attr("fill", "#d3d3d3");
+      .attr("fill", "#e6e6e6");
     gBackground.append("rect")
       .attr("class", "background")
       .attr("x", xScale(sixPM))
       .attr("y", 0)
       .attr("width", xScale(nextDay) - xScale(sixPM))
       .attr("height", height)
-      .attr("fill", "#d3d3d3");
+      .attr("fill", "#e6e6e6");
   }
 }
 drawBackground();
@@ -273,9 +273,9 @@ function drawLegend() {
   const legendContainer = legendDiv.append("div")
     .attr("class", "legend-container");
   const legendItems = [
-    { label: "Male", color: "#3690c0", shape: "line" },
-    { label: "Female (Estrus)", color: "red", shape: "line" },
-    { label: "Female (Non-Estrus)", color: "orange", shape: "line" }
+    { label: "Male", color: "lightblue", shape: "line" },
+    { label: "Female (Estrus)", color: "#fc5b7e", shape: "line" },
+    { label: "Female (Non-Estrus)", color: "lightpink", shape: "line" }
   ];
   legendItems.forEach(item => {
     const itemDiv = legendContainer.append("div").attr("class", "legend-item");
@@ -296,7 +296,7 @@ function drawLegend() {
     .attr("class", "legend-container lights-legend");
   const lightsLegendItems = [
     { label: "Lights On", color: "white", shape: "rect" },
-    { label: "Lights Off", color: "#d3d3d3", shape: "rect" }
+    { label: "Lights Off", color: "#e6e6e6", shape: "rect" }
   ];
   lightsLegendItems.forEach(item => {
     const itemDiv = lightsLegendContainer.append("div").attr("class", "legend-item");
@@ -381,7 +381,7 @@ function updateChart(currentTime) {
       femaleLineGroup.append("path")
         .datum(filteredSegment)
         .attr("fill", "none")
-        .attr("stroke", segment.estrus ? "red" : "orange")
+        .attr("stroke", segment.estrus ? "#fc5b7e" : "pink")
         .attr("stroke-width", 2)
         .attr("d", lineGenerator)
         .on("mousemove", function(event) {
@@ -484,7 +484,7 @@ function skipToEnd() {
       const path = femaleLineGroup.append("path")
         .datum(segment.data)
         .attr("fill", "none")
-        .attr("stroke", segment.estrus ? "red" : "orange")
+        .attr("stroke", segment.estrus ? "#fc5b7e" : "lightpink")
         .attr("stroke-width", 2)
         .attr("d", lineGenerator(segment.data.slice(0, 1)));
       path.transition().duration(1000)

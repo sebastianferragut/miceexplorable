@@ -61,7 +61,7 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .range(["lightblue", "darkblue"]);
     const femaleColorScale = d3.scaleLinear()
         .domain([0, uniqueBins.length - 1])
-        .range(["orange", "red"]);
+        .range(["pink", "red"]);
 
     const pie = d3.pie().sort(null).value(d => d.value);
     const arc = d3.arc().innerRadius(0).outerRadius(radius);

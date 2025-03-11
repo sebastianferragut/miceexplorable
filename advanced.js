@@ -446,6 +446,10 @@ function updateXAxis() {
 function updateChart() {
   const chartData = getChartData();
   const smoothedData = smoothData(chartData, SMOOTH_WINDOW);
+
+  const colorScale = d3.scaleOrdinal()
+    .domain(["male", "estrus", "non-estrus"])
+    .range(["lightblue", "#fc5b7e", "lightpink"]);
   
   // Always show full global range.
   yScale.domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02]);
@@ -466,6 +470,7 @@ function updateChart() {
         .attr("class", "mouse-line")
         .attr("clip-path", "url(#clip)")
         .attr("fill", "none")
+        .attr("stroke", d => colorScale(d.type))
         .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
         .attr("opacity", d => d.id.includes("avg") ? 0.7 : 0)
         .on("mouseover", showTooltip)
@@ -476,8 +481,8 @@ function updateChart() {
       .transition().duration(d => d.id.includes("avg") ? 250 : 600)
           .attr("d", d => lineGenerator(d.data))
           .attr("stroke", d => {
-              if (d.gender === "male") return "#3690c0";
-              return d.type === "estrus" ? "#ff0000" : "#ffa500";
+              if (d.gender === "male") return "lightblue";
+              return d.type === "estrus" ? "#fc5b7e" : "lightpink";
           })
           .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
           .attr("opacity", 0.7);
