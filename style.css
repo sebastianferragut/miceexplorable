@@ -3,10 +3,15 @@ body {
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
+    text-align: center;
   }
   h1 {
     text-align: center;
     color: #333;
+  }
+  h2 {
+    text-align: center;
+    color: #434343;
   }
   p {
     margin: 10px 0;
