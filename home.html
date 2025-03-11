@@ -1,52 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">         <!-- General styles -->
-  <link rel="stylesheet" href="home.css">          <!-- Home page–specific styles -->
+  <link rel="stylesheet" href="style.css"> <!-- General styles -->
+  <link rel="stylesheet" href="home.css"> <!-- Home page–specific styles -->
   <!-- Include the pie chart code -->
   <script type="module" src="piechart.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <title>Of Mice and Medicine - Home</title>
 </head>
+
 <body>
   <h1>Of Mice and Medicine</h1>
   <h2>The Impact of Biological Sex on Body Temperature and Activity</h2>
 
-  
+
   <p>
-    This study conducted research on both female and male mice observing their body temperature and activity levels. The data was collected over a period of 14 days with data down to the minute. Using lights they were able to control the daily cycles of the mice, allowing us to observe the impact of biological differences between the animals. Below are general visualizations to explore the data. Click on one of them to learn more about the subject.
+    This study conducted research on both female and male mice observing their body temperature and activity levels. The
+    data was collected over a period of 14 days with data down to the minute. Using lights they were able to control the
+    daily cycles of the mice, allowing us to observe the impact of biological differences between the animals. Below are
+    general visualizations to explore the data. Click on one of them to learn more about the subject.
   </p>
-  <div id="img-container">
-    <img src="imgs/malemice.png" width="500px">
-    <img src="imgs/femalemice.png" width="500px">
-  </div>
-  
+
   <!-- Containers for pie charts -->
-  <div id="piechart"></div>
-  <div id="temp-pie-chart"></div>
-  <div id="activity-pie-chart"></div>
-  
+
+  <div id="scrollytelling">
+    <div id="scroll-container">
+      <div id="spacer"></div>
+      <div id="items-container"></div>
+    </div>
+    <div id="piechart">
+      <div id="temp-pie-chart"></div>
+      <div id="activity-pie-chart"></div>
+    </div>
+  </div>
+
   <!-- Narrative text for piecharts -->
   <div id="narrative_pies">
     <p>
       The pie charts above show the distribution of temperature and activity across male and female mice.
       We can see that overall, female mice are clustered around higher temperatures in comparison to male mice.
-      This reveals insights about gender differences in mice: female mice undergo estrus, the reproductive cycle for mice.
-      This cycle can cause a rise in body temperature. Curiously, we see a slight drop in activity overall for female mice 
-      in comparison to male mice at the higher ranges. This could be due to the estrus cycle, which may cause a decrease 
-      in activity. Explore the advanced chart to gain more insights with time-specific visualizations for all mice, as well
-      as specific mice tracked through the study. 
+      This reveals insights about gender differences in mice: female mice undergo estrus, the reproductive cycle for
+      mice.
+      This cycle can cause a rise in body temperature. Curiously, we see a slight drop in activity overall for female
+      mice
+      in comparison to male mice at the higher ranges. This could be due to the estrus cycle, which may cause a decrease
+      in activity. Explore the advanced chart to gain more insights with time-specific visualizations for all mice, as
+      well
+      as specific mice tracked through the study.
     </p>
-  <!-- Navigation button to go to the advanced chart page -->
-  <div id="nav-advanced">
-    <button id="to-advanced">Go to Advanced Chart</button>
-  </div>
-  <script>
-    document.getElementById('to-advanced').addEventListener('click', () => {
-      window.location.href = 'advanced.html';
-    });
-  </script>
+    <!-- Navigation button to go to the advanced chart page -->
+    <div id="nav-advanced">
+      <button id="to-advanced">Go to Advanced Chart</button>
+    </div>
+    <script>
+      document.getElementById('to-advanced').addEventListener('click', () => {
+        window.location.href = 'advanced.html';
+      });
+    </script>
 </body>
+
 </html>

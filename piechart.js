@@ -3,6 +3,9 @@ let femaleTempData = [];
 let maleTempData = [];
 let femaleActData = [];
 let maleActData = [];
+let tempArr = Array.from({ length: 24 }, () => []);
+let actArr = Array.from({ length: 24 }, () => []);
+
 
 // Load CSV data
 async function loadData(filenames, labels) {
@@ -20,7 +23,7 @@ async function loadData(filenames, labels) {
             }
             // Expecting 13 columns per file for each subject
             for (let j = 1; j <= 13; j++) {
-                data[i][`${subjectPrefix}${j}`] = Number(row[`${subjectPrefix}${j}`]) || NaN;
+                data[i][`${subjectPrefix}${j}`] = Number(row[`${subjectPrefix}${j}`]);
             }
         });
     }
@@ -46,22 +49,23 @@ function categorizeData(data, minData, maxData, binsize) {
 }
 
 function drawPieCharts(femaleBins, maleBins, dataType, divId) {
+    d3.select(divId).select("svg").remove();
     const svg = d3.select(divId).append("svg")
-        .attr("width", 1200) // Increased width for two pie charts
-        .attr("height", 600);
+        .attr("width", 800) // Increased width for two pie charts
+        .attr("height", 400);
 
     const width = +svg.attr("width");
     const height = +svg.attr("height");
-    const radius = 200; // Size of each pie chart
+    const radius = 140; // Size of each pie chart
 
     // Use distinct color scales:
     const uniqueBins = Object.keys(femaleBins);
-    const maleColorScale = d3.scaleLinear()
-        .domain([0, uniqueBins.length - 1])
-        .range(["lightblue", "darkblue"]);
-    const femaleColorScale = d3.scaleLinear()
-        .domain([0, uniqueBins.length - 1])
-        .range(["pink", "red"]);
+    const colorScale = dataType === "Activity" ? d3.scaleLinear()
+    .domain([0, uniqueBins.length])
+    .range(["lightblue", "blue"]):d3.scaleLinear()
+        .domain([0, uniqueBins.length])
+        .range(["yellow", "red"]);
+    
 
     const pie = d3.pie().sort(null).value(d => d.value);
     const arc = d3.arc().innerRadius(0).outerRadius(radius);
@@ -69,10 +73,10 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
 
     // Prepare data arrays for male and female
     let femaleData = uniqueBins.map((bin, i) => ({
-        key: bin, value: femaleBins[bin], color: femaleColorScale(i)
+        key: bin, value: femaleBins[bin], color: colorScale(i)
     }));
     let maleData = uniqueBins.map((bin, i) => ({
-        key: bin, value: maleBins[bin], color: maleColorScale(i)
+        key: bin, value: maleBins[bin], color: colorScale(i)
     }));
 
     // Create tooltip
@@ -169,51 +173,29 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .style("font-size", "20px")
         .style("font-weight", "bold")
         .text(`Female Mice ${dataType} Distribution`);
+   
+    const legendGroup = svg.append("g")
+        .attr("transform", `translate(${width/2-20}, 50)`);
 
-    // Legend (for both groups; you can adjust as needed)
-    const femalelegendGroup = svg.append("g")
-        .attr("transform", `translate(${width - 80}, 100)`);
-
-    femalelegendGroup.selectAll("rect")
+    legendGroup.selectAll("rect")
         .data(uniqueBins)
         .enter()
         .append("rect")
         .attr("x", 0)
-        .attr("y", (d, i) => i * 20)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("fill", (d, i) => femaleColorScale(i));
+        .attr("y", (d, i) => i * 10 )
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", (d, i) => colorScale(i));
 
-    femalelegendGroup.selectAll("text")
+    legendGroup.selectAll("text")
         .data(uniqueBins)
         .enter()
         .append("text")
-        .attr("x", 30)
-        .attr("y", (d, i) => i * 20 + 15)
+        .attr("x", 10)
+        .attr("y", (d, i) => i * 10 +10 )
         .text(d => d)
-        .attr("font-size", "12px");
-
-    const malelegendGroup = svg.append("g")
-        .attr("transform", `translate(${width/2 - 80}, 100)`);
-
-    malelegendGroup.selectAll("rect")
-        .data(uniqueBins)
-        .enter()
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", (d, i) => i * 20)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("fill", (d, i) => maleColorScale(i));
-
-    malelegendGroup.selectAll("text")
-        .data(uniqueBins)
-        .enter()
-        .append("text")
-        .attr("x", 30)
-        .attr("y", (d, i) => i * 20 + 15)
-        .text(d => d)
-        .attr("font-size", "12px");
+        .attr("font-size", "8px")
+        .attr("padding-block", "0px");
 }
 
 // Helper: Find min and max across 2D array
@@ -232,22 +214,7 @@ function findMinMax(arr) {
     return { min, max };
 }
 
-// Load data and generate the charts
-document.addEventListener("DOMContentLoaded", async () => {
-    const tempFiles = [
-        "fem_temp.csv",
-        "male_temp.csv"
-    ];
-
-    const activityFiles = [
-        "fem_act.csv",
-        "male_act.csv"
-    ];
-    const labels = ["f", "m"];
-
-    const temperatureData = await loadData(tempFiles, labels);
-    const activityData = await loadData(activityFiles, labels);
-    
+function updatePieChart(temperatureData, activityData){
     for (let min = 0; min < temperatureData.length; min++) {
         let minuteTemps = temperatureData[min];
         if (minuteTemps) {
@@ -268,6 +235,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const femaleActStats = findMinMax(femaleActData);
     const maleActStats = findMinMax(maleActData);
 
+    const numArc = 8;
     const femaleTempBins = categorizeData(femaleTempData, femaleTempStats.min, femaleTempStats.max, 0.5);
     const maleTempBins = categorizeData(maleTempData, maleTempStats.min, maleTempStats.max, 0.5);
     const femaleActBins = categorizeData(femaleActData, femaleActStats.min, femaleActStats.max, 25);
@@ -275,4 +243,105 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     drawPieCharts(femaleTempBins, maleTempBins, 'Temperature', "#temp-pie-chart");
     drawPieCharts(femaleActBins, maleActBins, "Activity", "#activity-pie-chart");
+}
+
+function updateScrollContent(temperatureData, activityData) {
+    const itemsContainer = d3.select('#items-container');
+
+    // Clear old content before appending new
+    itemsContainer.html("");
+
+
+    // Group data correctly by hour
+    for (let i = 0; i < temperatureData.length; i++) {
+        let hour = Math.floor(i / 60) % 24;  
+        tempArr[hour].push(temperatureData[i]);  
+        actArr[hour].push(activityData[i]);
+    }
+
+
+    let hourContainer = itemsContainer
+        .selectAll('.hour-group')
+        .data(tempArr)
+        .enter()
+        .append('div')
+        .attr('class', 'hour-group')
+        .style("margin-bottom", "15px")
+        .style("padding", "10px")
+        .style("border-bottom", "1px solid #ddd");
+
+    // Append hour label
+    hourContainer.append('dt')
+        .html((_, i) => `<strong>Hour ${i}:00</strong>`)
+        .style("font-size", "16px");
+
+    // Append temperature readings (inside each hour group)
+    hourContainer.append('dd')
+        .html((_, i) => {
+            let tempAverages = calculateGenderAverages(tempArr[i]);
+            let actAverages = calculateGenderAverages(actArr[i]);  // Use matching activity data
+
+            return `
+            <div class="temp" style="color: orange;">
+                Temp Avg (F): ${tempAverages.femaleAvg}°C<br>
+                Temp Avg (M): ${tempAverages.maleAvg}°C
+            </div>
+            <div class="activity" style="color: lightblue;">
+                Activity Avg (F): ${actAverages.femaleAvg}<br>
+                Activity Avg (M): ${actAverages.maleAvg}
+            </div>`;
+        });
+
+}
+function calculateGenderAverages(dataArray) {
+    let maleValues = [];
+    let femaleValues = [];
+
+    dataArray.forEach(entry => {
+        Object.keys(entry).forEach(key => {
+            if (key.startsWith("f") && typeof entry[key] === "number") {  
+                femaleValues.push(entry[key]);  
+            }
+            if (key.startsWith("m") && typeof entry[key] === "number" && key !== "minute") {  
+                maleValues.push(entry[key]);    
+            }
+        });
+    });
+
+    let maleAvg = maleValues.length > 0 
+        ? (maleValues.reduce((a, b) => a + b, 0) / maleValues.length).toFixed(1) 
+        : 'N/A';
+    let femaleAvg = femaleValues.length > 0 
+        ? (femaleValues.reduce((a, b) => a + b, 0) / femaleValues.length).toFixed(1) 
+        : 'N/A';
+
+    return { maleAvg, femaleAvg };
+}
+
+
+
+// Load data and generate the charts
+document.addEventListener("DOMContentLoaded", async () => {
+    const tempFiles = [
+        "fem_temp.csv",
+        "male_temp.csv"
+    ];
+
+    const activityFiles = [
+        "fem_act.csv",
+        "male_act.csv"
+    ];
+    const labels = ["f", "m"];
+
+    const temperatureData = await loadData(tempFiles, labels);
+    const activityData = await loadData(activityFiles, labels);
+    updatePieChart(temperatureData, activityData)
+    updateScrollContent(temperatureData, activityData)
+    const scrollContainer = d3.select('#scroll-container');
+scrollContainer.on('scroll', () => {
+    const scrollTop = scrollContainer.property('scrollTop');
+    const hour = Math.floor(scrollTop/ 500)
+    updatePieChart(tempArr[hour], actArr[hour])
+    
+});
 });

@@ -1,8 +1,12 @@
 body {
-  margin-inline: 10%;
+  margin-inline: 3%;
 }
 /* Home page-specific styles */
-#piechart,
+#piechart{
+  position: sticky;
+  grid-column: 2;
+  display: grid;
+}
 #temp-pie-chart,
 #activity-pie-chart {
   display: flex;
@@ -14,8 +18,45 @@ body {
   text-align: right;
   margin: 20px;
 }
-#img-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+
+
+#scrollytelling {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
 }
+
+/* feel free to play with this to make your scrolly more seemless with your plot */
+#scroll-container {
+  grid-column: 1;
+  position: relative;
+  width: 95%;
+  height: 350px;
+  overflow-y: scroll;
+  border: 1px solid #ccc;
+  margin-bottom: 50px;
+}
+
+#spacer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: none; /* transparent */
+  pointer-events: none;
+}
+
+#items-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.item {
+  height: 30px;
+  padding: 10px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #eee;
+}
+
