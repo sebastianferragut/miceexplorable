@@ -629,12 +629,15 @@ document.getElementById("home-button").addEventListener("click", () => {
   window.location.href = "home.html";
 });
 
+
+
 // Function to update the narrative text based on the current simulation time.
 function updateNarrative(currentTime) {
   const dayNumber = Math.floor((currentTime - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
   if (dayNumber > 14) { 
     const maxMaleValue = d3.max(smoothedMaleGlobal, d => d.value);
     const minMaleValue = d3.min(smoothedMaleGlobal, d => d.value);
+    
     const maxFemaleValue = d3.max(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
     const minFemaleValue = d3.min(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
 
@@ -655,7 +658,7 @@ function updateNarrative(currentTime) {
       const day = Math.floor((d.time - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
       return day === dayNumber;
     });
-
+    
     const maxMaleValue = d3.max(currentDayMaleData, d => d.value);
     const maxFemaleValue = d3.max(currentDayFemaleData, d => d.value);
     const minMaleValue = d3.min(currentDayMaleData, d => d.value);
