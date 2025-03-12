@@ -668,7 +668,7 @@ function updateNarrative(currentTime) {
       Day ${dayNumber.toString().padStart(2, '0')}<br/> 
       Current maximum ${dataLabel} from male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${unitLabel}.<br/>
       Current minimum ${dataLabel} from male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${unitLabel}.<br/>
-      Current maximum ${dataLabel} from female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${unitLabel}.<br/>
+      Current maximum ${dataLabel} from female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${unitLabel}.<br/>
       Current minimum ${dataLabel} from female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${unitLabel}.
     `);
   }
