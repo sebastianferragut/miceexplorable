@@ -4,7 +4,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 // Set up margins, dimensions, and SVG container.
 const margin = { top: 50, right: 30, bottom: 50, left: 60 };
 let container = d3.select("#detail-chart").node();
-// Instead of using a fixed height, derive it from the container's clientHeight.
+// Use viewport-based dimensions so the chart fits on screen.
 let width = container.clientWidth - margin.left - margin.right;
 let height = container.clientHeight - margin.top - margin.bottom;
 
@@ -275,6 +275,7 @@ function drawLegend() {
   const legendDiv = d3.select("#legend");
   legendDiv.html("");
   
+  // Existing legend items.
   const legendContainer = legendDiv.append("div")
     .attr("class", "legend-container");
   const legendItems = [
@@ -297,22 +298,24 @@ function drawLegend() {
     itemDiv.append("span").text(item.label);
   });
   
-  const lightsLegendContainer = legendDiv.append("div")
-    .attr("class", "legend-container lights-legend");
-  const lightsLegendItems = [
-    { label: "Lights On", color: "white", shape: "rect" },
-    { label: "Lights Off", color: "#e6e6e6", shape: "rect" }
+  // New legend for max lines.
+  const maxLegendContainer = legendDiv.append("div")
+    .attr("class", "legend-container max-legend");
+  const maxLegendItems = [
+    { label: "Max Male", color: "lightblue", dash: "4,2" },
+    { label: "Max Female", color: "#d93d5f", dash: "4,2" }
   ];
-  lightsLegendItems.forEach(item => {
-    const itemDiv = lightsLegendContainer.append("div").attr("class", "legend-item");
-    if(item.shape === "rect"){
-      const swatch = itemDiv.append("svg").attr("width",30).attr("height",20);
-      swatch.append("rect")
-        .attr("width",30)
-        .attr("height",20)
-        .attr("fill",item.color)
-        .attr("stroke","#000");
-    }
+  maxLegendItems.forEach(item => {
+    const itemDiv = maxLegendContainer.append("div").attr("class", "legend-item");
+    const swatch = itemDiv.append("svg").attr("width",30).attr("height",20);
+    swatch.append("line")
+          .attr("x1",0)
+          .attr("y1",10)
+          .attr("x2",30)
+          .attr("y2",10)
+          .attr("stroke", item.color)
+          .attr("stroke-width",2)
+          .attr("stroke-dasharray", item.dash);
     itemDiv.append("span").text(item.label);
   });
 }
@@ -356,7 +359,7 @@ function updateChart(currentTime) {
   }
   
   // Define tooltip labels based on mode.
-  const dataLabel = mode === "activity" ? "Activity" : "Temp";
+  const dataLabel = mode === "activity" ? "Activity" : "Temperature";
   const unitLabel = mode === "activity" ? "" : "°C";
   
   const filteredMale = smoothedMaleGlobal.filter(d => d.time >= filterStart && d.time <= filterEnd);
@@ -454,7 +457,7 @@ function updateChart(currentTime) {
 }
 
 // -----------------------
-// Function to update the live tooltip during animation (phase 1).
+// Function to update the live info box during animation (phase 1).
 function updateLiveTooltip() {
   if (phase !== 1) return;
   // Compute the current male and female values up to currentSimTime.
@@ -466,11 +469,14 @@ function updateLiveTooltip() {
   const femaleVal = femaleData[femaleData.length - 1].value;
   const maleDiff = maleVal - femaleVal;
   const femaleDiff = femaleVal - maleVal;
+  const maleDiffColor = maleDiff >= 0 ? "green" : "red";
+  const femaleDiffColor = femaleDiff >= 0 ? "green" : "red";
+  
   d3.select("#detail-tooltip")
-    .html(`<div>Male: ${maleVal.toFixed(2)} (${maleDiff.toFixed(2)})</div>
-           <div>Female: ${femaleVal.toFixed(2)} (${femaleDiff.toFixed(2)})</div>`)
+    .html(`<div style="font-size:18px;">Male: ${maleVal.toFixed(2)} (<span style="color:${maleDiffColor};">${(maleDiff >= 0 ? "+" : "") + maleDiff.toFixed(2)}</span>)</div>
+           <div style="font-size:18px;">Female: ${femaleVal.toFixed(2)} (<span style="color:${femaleDiffColor};">${(femaleDiff >= 0 ? "+" : "") + femaleDiff.toFixed(2)}</span>)</div>`)
     .style("display", "block")
-    // Position the tooltip to the right of the chart.
+    // Position the box to the right of the chart.
     .style("left", (container.getBoundingClientRect().right + 15) + "px")
     .style("top", (container.getBoundingClientRect().top + margin.top) + "px");
 }
@@ -487,16 +493,14 @@ function runAnimation(startTime) {
     currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
     updateNarrative(currentSimTime); // Update the narrative text
     updateChart(currentSimTime);
-    // During animation, update the live tooltip.
+    // During animation, update the live info box.
     if (phase === 1) updateLiveTooltip();
     if (currentSimTime > experimentEnd) {
       animationTimer.stop();
       phase = 2;
       updateChart(experimentEnd);
-      // Reposition the tooltip back to its original location below the chart.
-      d3.select("#detail-tooltip")
-        .style("left", (container.getBoundingClientRect().left + width/2) + "px")
-        .style("top", (container.getBoundingClientRect().bottom + 10) + "px");
+      // Remove the live info box after animation finishes.
+      d3.select("#detail-tooltip").style("display", "none");
       d3.select("#reset-scope-button").style("display", "block");
     }
   }, 50);
@@ -574,10 +578,8 @@ function skipToEnd() {
     d3.select("#pause-button").style("display", "none");
     d3.select("#skip-end-button").style("display", "none");
     d3.select("#reset-scope-button").style("display", "inline-block");
-    // Reposition the tooltip back to its original position below the chart.
-    d3.select("#detail-tooltip")
-      .style("left", (container.getBoundingClientRect().left + width/2) + "px")
-      .style("top", (container.getBoundingClientRect().bottom + 10) + "px");
+    // Remove the live info box.
+    d3.select("#detail-tooltip").style("display", "none");
     enableBrush();
   }, 500);
 }
@@ -712,6 +714,9 @@ document.getElementById("home-button").addEventListener("click", () => {
 // Function to update the narrative text based on the current simulation time.
 function updateNarrative(currentTime) {
   const dayNumber = Math.floor((currentTime - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
+  const dataLabel = mode === "activity" ? "Activity" : "Temperature";
+  const unitLabel = mode === "activity" ? "" : "°C";
+  
   if (dayNumber > 14) { 
     // Overall maximum and minimum values.
     const maxMaleValue = d3.max(smoothedMaleGlobal, d => d.value);
@@ -722,13 +727,16 @@ function updateNarrative(currentTime) {
     // Compute maximum absolute difference.
     const maxDiff = Math.abs(maxFemaleValue - maxMaleValue);
 
-    d3.select("#dynamic-narrative").html(`</br>
-      Currently displaying all data.<br/>
-      Maximum ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Minimum ${mode === "activity" ? "activity" : "temperature"} for male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Maximum ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Minimum ${mode === "activity" ? "activity" : "temperature"} for female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${mode === "activity" ? "" : "°C"}.<br/>
-      Maximum difference between female and male is ${maxDiff.toFixed(2)}${mode === "activity" ? "" : "°C"}.
+    // Display summary as a table.
+    d3.select("#dynamic-narrative").html(`
+      <table class="summary-table">
+        <tr><th colspan="2">Summary for ${dataLabel} Data (Mouse ID: ${mouseNumber})</th></tr>
+        <tr><td>Maximum ${dataLabel} (Male):</td><td>${maxMaleValue.toFixed(2)}${unitLabel}</td></tr>
+        <tr><td>Minimum ${dataLabel} (Male):</td><td>${minMaleValue.toFixed(2)}${unitLabel}</td></tr>
+        <tr><td>Maximum ${dataLabel} (Female):</td><td>${maxFemaleValue.toFixed(2)}${unitLabel}</td></tr>
+        <tr><td>Minimum ${dataLabel} (Female):</td><td>${minFemaleValue.toFixed(2)}${unitLabel}</td></tr>
+        <tr><td>Maximum Difference:</td><td>${maxDiff.toFixed(2)}${unitLabel}</td></tr>
+      </table>
     `);
   } else {
     const currentDayMaleData = smoothedMaleGlobal.filter(d => {
@@ -744,9 +752,6 @@ function updateNarrative(currentTime) {
     const maxFemaleValue = d3.max(currentDayFemaleData, d => d.value);
     const minMaleValue = d3.min(currentDayMaleData, d => d.value);
     const minFemaleValue = d3.min(currentDayFemaleData, d => d.value);
-
-    const dataLabel = mode === "activity" ? "activity" : "temperature";
-    const unitLabel = mode === "activity" ? "" : "°C";
 
     d3.select("#dynamic-narrative").html(`<br/>
       Day ${dayNumber.toString().padStart(2, '0')}<br/> 
