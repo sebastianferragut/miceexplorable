@@ -1,10 +1,25 @@
+/* Ensure the full viewport is used without scrolling */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Wrap the entire page content in a container that is scaled down */
+#main-container {
+  transform: scale(0.9);
+  transform-origin: top left;
+  width: 111%;
+  height: 111%;
+}
+
 body {
   font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
   background-color: #f4f4f4;
   text-align: center;
   position: relative;
+  padding: 20px;
 }
 
 .home-button {
@@ -36,8 +51,7 @@ body {
 
 h1 {
   color: #333;
-  margin-bottom: 10px;
-  margin-top: 50px;
+  margin: 50px 0 10px 0;
 }
 
 #detail-chart {
@@ -118,9 +132,9 @@ button:hover {
   background-color: #d93d5f;
 }
 
-/* Updated non-estrus color for better contrast */
+/* Updated non-estrus legend color: orangey-yellow */
 #nonEstrusCheckbox:checked + .legend-color {
-  background-color: #6a0dad;
+  background-color: #ffae42;
 }
 
 .legend-swatch {
@@ -150,7 +164,6 @@ button:hover {
   margin-top: 10px;
 }
 
-/* Advanced.css additions */
 #tooltip {
   position: absolute;
   pointer-events: none;
@@ -167,7 +180,8 @@ button:hover {
   opacity: 1;
 }
 
-/* Ensure the advanced chart container has a minimum height */
+/* Advanced chart container styling */
 #advanced-chart {
+  /* Adjusted to work well within the scaled layout */
   min-height: 500px;
 }

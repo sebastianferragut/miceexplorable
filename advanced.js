@@ -4,14 +4,10 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 // Advanced Chart Code (Temperature and Activity)
 // ------------------------
 
-// Global variable for current mode: "temperature" or "activity"
 let currentMode = "temperature";
-
-// Global variables for data and state
 let allData = [];
 let aggregatedMale, aggregatedFemaleEstrus, aggregatedFemaleNonEstrus;
 let expandedGroups = { male: false, estrus: false, "non-estrus": false };
-// Default selected filters (if no URL parameter, show all)
 let selectedFilters = { male: true, estrus: true, "non-estrus": true };
 
 const margin = { top: 30, right: 30, bottom: 60, left: 60 };
@@ -19,24 +15,16 @@ let width, height;
 let svg, xScale, yScale, xAxis, yAxis;
 let originalXDomain, originalYDomain;
 let constantXScale;
-let brush; // Global brush variable
+let brush;
 
-// Create tooltip element inside the advanced chart container.
-// Styling is handled in advanced.css.
 const tooltip = d3.select("#advanced-chart")
   .append("div")
     .attr("id", "tooltip");
 
 const LIGHTS_OFF_COLOR = "rgba(0, 0, 0, 0.1)";
 let globalYDomain;
-
-// Smoothing window (in minutes)
 const SMOOTH_WINDOW = 5;
-
-// Precompute an array of Date objects—one for each minute in the day.
 const times = d3.range(1440).map(i => new Date(2023, 0, 1, 0, i));
-
-// Full-day ticks for x-axis.
 const fullDayTicks = [
   new Date(2023, 0, 1, 0, 0),
   new Date(2023, 0, 1, 3, 0),
@@ -48,26 +36,18 @@ const fullDayTicks = [
   new Date(2023, 0, 1, 21, 0),
   new Date(2023, 0, 1, 23, 59)
 ];
-
-// Custom tick format.
 const customTimeFormat = d => {
   if (d.getHours() === 23 && d.getMinutes() === 59) return "11:59 pm";
   return d3.timeFormat("%-I %p")(d);
 };
 
-// Helper: Get dimensions from the #advanced-chart container.
-// Ensures a minimum height of 500 pixels.
 function getContainerDimensions() {
   const container = d3.select("#advanced-chart").node();
   let h = container.clientHeight;
   if (h < 100) h = 500;
-  return {
-    width: container.clientWidth,
-    height: h
-  };
+  return { width: container.clientWidth, height: h };
 }
 
-// Update the document title and header based on the current mode.
 function updatePageTitle() {
   if (currentMode === "temperature") {
     document.querySelector("h1").textContent = "Average Daily Cycle of Body Temperature of Mice";
@@ -80,7 +60,6 @@ function updatePageTitle() {
   }
 }
 
-// Update chart dimensions using container dimensions.
 function updateDimensions() {
   const dims = getContainerDimensions();
   width = dims.width - margin.left - margin.right;
@@ -120,7 +99,6 @@ function updateDimensions() {
     .attr("x", -height / 2)
     .attr("y", -margin.left + 15);
   
-  // Update brush extent.
   svg.select(".brush")
     .call(brush.extent([[0, 0], [width, height]]).on("end", brushed));
   
@@ -128,7 +106,6 @@ function updateDimensions() {
   updateChart();
 }
 
-// Load data based on the current mode (temperature or activity).
 async function loadData() {
   updatePageTitle();
   let maleFile, femFile;
@@ -150,11 +127,9 @@ async function loadData() {
     ...processMiceData(femCSV, "female")
   ];
   
-  // Compute overall y domain.
   const allValues = allData.flatMap(d => d.data);
   globalYDomain = [d3.min(allValues), d3.max(allValues)];
   
-  // Compute aggregated lines.
   const maleData = allData.filter(d => d.gender === "male");
   const femaleEstrusData = allData.filter(d => d.gender === "female" && d.type === "estrus");
   const femaleNonEstrusData = allData.filter(d => d.gender === "female" && d.type === "non-estrus");
@@ -173,7 +148,6 @@ function rowConverter(d) {
   return converted;
 }
 
-// Process CSV data into one-day averages.
 function processMiceData(dataset, gender) {
   const miceIDs = Object.keys(dataset[0]).filter(k => k !== "minuteIndex");
   return miceIDs.flatMap(mouseID => {
@@ -226,7 +200,6 @@ function computeAggregatedLine(dataArray) {
   return aggregated.map(v => v / count);
 }
 
-// Smoothing function.
 function smoothData(dataArray, window_size) {
   return dataArray.map(entry => ({
     id: entry.id,
@@ -240,7 +213,6 @@ function smoothData(dataArray, window_size) {
   }));
 }
 
-// Returns the data to display based on filters and expansion state.
 function getChartData() {
   let chartData = [];
   const maleData = allData.filter(d => d.gender === "male");
@@ -263,7 +235,6 @@ function getChartData() {
 }
 
 function initializeChart() {
-  // Compute container dimensions.
   const dims = getContainerDimensions();
   width = dims.width - margin.left - margin.right;
   height = dims.height - margin.top - margin.bottom;
@@ -303,7 +274,6 @@ function initializeChart() {
     .attr("height", height)
     .attr("fill", LIGHTS_OFF_COLOR);
   
-  // Light conditions labels.
   svg.append("text")
     .attr("class", "lightOnLabel")
     .attr("x", constantXScale(new Date(2023,0,1,6,0)))
@@ -320,7 +290,6 @@ function initializeChart() {
     .attr("fill", "#333")
     .style("font-size", "16px");
   
-  // X-axis title.
   svg.append("text")
     .attr("class", "x-axis-label")
     .attr("x", width/2)
@@ -330,7 +299,6 @@ function initializeChart() {
     .style("fill", "#333")
     .text("Time of Day");
   
-  // Y-axis title.
   svg.append("text")
     .attr("class", "y-axis-label")
     .attr("transform", "rotate(-90)")
@@ -349,7 +317,6 @@ function initializeChart() {
   yAxis = svg.append("g")
     .call(d3.axisLeft(yScale));
   
-  // Light conditions legend inside the chart.
   const lightLegend = svg.append("g")
     .attr("class", "light-legend")
     .attr("transform", `translate(${width - 120},10)`);
@@ -380,7 +347,6 @@ function initializeChart() {
     .attr("y", 40)
     .text("Light Off");
   
-  // Brush for zooming.
   brush = d3.brushX()
     .extent([[0,0],[width,height]])
     .on("end", brushed);
@@ -447,12 +413,11 @@ function updateChart() {
   const chartData = getChartData();
   const smoothedData = smoothData(chartData, SMOOTH_WINDOW);
 
-  // Updated color scale: male remains "lightblue", estrus remains "#d93d5f", non‑estrus now "#6a0dad"
+  // Updated color scale: male = "lightblue", estrus = "#d93d5f", non‑estrus = orangey-yellow "#ffae42"
   const colorScale = d3.scaleOrdinal()
     .domain(["male", "estrus", "non-estrus"])
-    .range(["lightblue", "#d93d5f", "#6a0dad"]);
+    .range(["lightblue", "#d93d5f", "#ffae42"]);
   
-  // Always show full global range.
   yScale.domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02]);
   yAxis.transition().duration(250).call(d3.axisLeft(yScale));
   updateXAxis();
@@ -463,7 +428,7 @@ function updateChart() {
       .y(d => yScale(d))
       .curve(d3.curveMonotoneX);
   
-  // Create hit area paths for improved selectability
+  // Create hit areas for easier selection
   const hitPaths = svg.selectAll(".mouse-hit")
       .data(smoothedData, d => d.id);
   
@@ -503,14 +468,14 @@ function updateChart() {
           .attr("d", d => lineGenerator(d.data))
           .attr("stroke", d => {
               if (d.gender === "male") return "lightblue";
-              return d.type === "estrus" ? "#d93d5f" : "#6a0dad";
+              return d.type === "estrus" ? "#d93d5f" : "#ffae42";
           })
           .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
           .attr("opacity", 0.7);
   
   lines.exit().remove();
   
-  // Ensure average lines are on top in both hit areas and visible lines.
+  // Ensure average lines are raised on top
   svg.selectAll(".mouse-line")
       .filter(d => d.id.includes("avg"))
       .raise();
@@ -519,8 +484,6 @@ function updateChart() {
       .raise();
 }
 
-// Tooltip functions.
-// Now using event.pageX and event.pageY to position the tooltip near the cursor.
 function showTooltip(event, mouse) {
   const hoveredId = mouse.id;
   d3.selectAll(".mouse-line")
@@ -556,9 +519,6 @@ function hideTooltip() {
   tooltip.classed("visible", false);
 }
 
-// Modified click handler:
-// If the clicked line is an individual (its id does NOT include "avg"),
-// redirect to the detailed chart page with the current mode.
 function lineClicked(event, d) {
   if (!d.id.includes("avg")) {
     window.location.href = `mouseDetail.html?mouseID=${d.id}&mode=${currentMode}`;
@@ -606,7 +566,6 @@ function resetBrush() {
       .attr("d", d => lineGenerator(d.data));
 }
 
-// Event listeners for data type switching buttons.
 function setupDataTypeButtons() {
   document.getElementById("temp-button").addEventListener("click", () => {
     if (currentMode !== "temperature") {
@@ -625,21 +584,16 @@ function setupDataTypeButtons() {
   });
 }
 
-// Updates narrative text based on current mode
 function updateNarrativeText(currentMode) {
   const narrativeDiv = document.getElementById("narrative-advanced");
   narrativeDiv.innerHTML = "";
 }
 
-// -----------------------
-// On DOMContentLoaded, set defaults based on URL parameters.
 document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const modeParam = urlParams.get("mode");
-  if (modeParam) {
-    currentMode = modeParam;
-  }
-  const filterParam = urlParams.get("filter"); // "male" or "female"
+  if (modeParam) { currentMode = modeParam; }
+  const filterParam = urlParams.get("filter");
   if (filterParam === "male") {
     selectedFilters = { male: true, estrus: false, "non-estrus": false };
     document.getElementById("maleCheckbox").checked = true;
@@ -655,7 +609,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loadData();
   setupDataTypeButtons();
   
-  // Add event listeners for filtering checkboxes.
   d3.select("#maleCheckbox").on("change", function() {
     selectedFilters.male = this.checked;
     updateChart();
@@ -670,13 +623,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   d3.select("#resetBrush").on("click", resetBrush);
   
-  // Home button: route back to home.html.
   document.getElementById("home-button").addEventListener("click", () => {
     window.location.href = "home.html";
   });
 });
 
-// Resize chart on window resize.
 window.addEventListener("resize", () => {
   updateDimensions();
   svg.select(".brush").call(brush.move, null);
