@@ -64,10 +64,10 @@ button:hover {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  .home-button:hover {
+}
+.home-button:hover {
     background-color: #575757;
-  }
+}
 
 #legend {
     margin-top: 15px;
@@ -122,4 +122,10 @@ button:hover {
     font-size: 15px;
     color: #8b8686;
     margin-top: 10px;
-  }
+}
+
+/* New styling for max lines */
+.max-lines line {
+    stroke-width: 2;
+    stroke-dasharray: 4,2;
+}
