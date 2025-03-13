@@ -447,9 +447,10 @@ function updateChart() {
   const chartData = getChartData();
   const smoothedData = smoothData(chartData, SMOOTH_WINDOW);
 
+  // Updated color scale: male remains "lightblue", estrus remains "#d93d5f", non‑estrus now "#6a0dad"
   const colorScale = d3.scaleOrdinal()
     .domain(["male", "estrus", "non-estrus"])
-    .range(["lightblue", "#d93d5f", "lightpink"]);
+    .range(["lightblue", "#d93d5f", "#6a0dad"]);
   
   // Always show full global range.
   yScale.domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02]);
@@ -462,6 +463,27 @@ function updateChart() {
       .y(d => yScale(d))
       .curve(d3.curveMonotoneX);
   
+  // Create hit area paths for improved selectability
+  const hitPaths = svg.selectAll(".mouse-hit")
+      .data(smoothedData, d => d.id);
+  
+  hitPaths.enter()
+      .append("path")
+        .attr("class", "mouse-hit")
+        .attr("fill", "none")
+        .attr("stroke", "transparent")
+        .attr("stroke-width", 10)
+        .on("mouseover", showTooltip)
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip)
+        .on("click", lineClicked)
+    .merge(hitPaths)
+      .transition().duration(d => d.id.includes("avg") ? 250 : 600)
+          .attr("d", d => lineGenerator(d.data));
+  
+  hitPaths.exit().remove();
+  
+  // Create visible paths
   const lines = svg.selectAll(".mouse-line")
       .data(smoothedData, d => d.id);
   
@@ -470,29 +492,68 @@ function updateChart() {
         .attr("class", "mouse-line")
         .attr("clip-path", "url(#clip)")
         .attr("fill", "none")
-        .attr("stroke", d => colorScale(d.type))
         .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
         .attr("opacity", d => d.id.includes("avg") ? 0.7 : 0)
         .on("mouseover", showTooltip)
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip)
         .on("click", lineClicked)
-      .merge(lines)
+    .merge(lines)
       .transition().duration(d => d.id.includes("avg") ? 250 : 600)
           .attr("d", d => lineGenerator(d.data))
           .attr("stroke", d => {
               if (d.gender === "male") return "lightblue";
-              return d.type === "estrus" ? "#d93d5f" : "lightpink";
+              return d.type === "estrus" ? "#d93d5f" : "#6a0dad";
           })
           .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
           .attr("opacity", 0.7);
   
   lines.exit().remove();
   
-  // Bring average lines to front.
+  // Ensure average lines are on top in both hit areas and visible lines.
   svg.selectAll(".mouse-line")
       .filter(d => d.id.includes("avg"))
       .raise();
+  svg.selectAll(".mouse-hit")
+      .filter(d => d.id.includes("avg"))
+      .raise();
+}
+
+// Tooltip functions.
+// Now using event.pageX and event.pageY to position the tooltip near the cursor.
+function showTooltip(event, mouse) {
+  const hoveredId = mouse.id;
+  d3.selectAll(".mouse-line")
+      .filter(d => d.id === hoveredId)
+      .attr("opacity", 1)
+      .attr("stroke-width", d => d.id.includes("avg") ? 3 : 2.5);
+  d3.selectAll(".mouse-line")
+      .filter(d => d.id !== hoveredId)
+      .attr("opacity", 0.5);
+  
+  tooltip
+    .style("left", `${event.pageX + 10}px`)
+    .style("top", `${event.pageY + 10}px`)
+    .html(`
+      <strong>${mouse.id}</strong><br>
+      Gender: ${mouse.gender}<br>
+      ${mouse.type ? `Type: ${mouse.type.replace("-", " ")}` : ""}<br>
+      <em>click to learn more about this mouse</em>
+    `)
+    .classed("visible", true);
+}
+
+function moveTooltip(event) {
+  tooltip
+    .style("left", `${event.pageX + 10}px`)
+    .style("top", `${event.pageY + 10}px`);
+}
+
+function hideTooltip() {
+  d3.selectAll(".mouse-line")
+      .attr("opacity", 0.7)
+      .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5);
+  tooltip.classed("visible", false);
 }
 
 // Modified click handler:
@@ -545,42 +606,6 @@ function resetBrush() {
       .attr("d", d => lineGenerator(d.data));
 }
 
-// Tooltip functions.
-// Now using event.pageX and event.pageY to position the tooltip near the cursor.
-function showTooltip(event, mouse) {
-  const hoveredId = mouse.id;
-  d3.selectAll(".mouse-line")
-      .filter(d => d.id === hoveredId)
-      .attr("opacity", 1)
-      .attr("stroke-width", d => d.id.includes("avg") ? 3 : 2.5);
-  d3.selectAll(".mouse-line")
-      .filter(d => d.id !== hoveredId)
-      .attr("opacity", 0.5);
-  
-  tooltip
-    .style("left", `${event.pageX + 10}px`)
-    .style("top", `${event.pageY + 10}px`)
-    .html(`
-      <strong>${mouse.id}</strong><br>
-      Gender: ${mouse.gender}<br>
-      ${mouse.type ? `Type: ${mouse.type.replace("-", " ")}` : ""}
-    `)
-    .classed("visible", true);
-}
-
-function moveTooltip(event) {
-  tooltip
-    .style("left", `${event.pageX + 10}px`)
-    .style("top", `${event.pageY + 10}px`);
-}
-
-function hideTooltip() {
-  d3.selectAll(".mouse-line")
-      .attr("opacity", 0.7)
-      .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5);
-  tooltip.classed("visible", false);
-}
-
 // Event listeners for data type switching buttons.
 function setupDataTypeButtons() {
   document.getElementById("temp-button").addEventListener("click", () => {
@@ -603,27 +628,17 @@ function setupDataTypeButtons() {
 // Updates narrative text based on current mode
 function updateNarrativeText(currentMode) {
   const narrativeDiv = document.getElementById("narrative-advanced");
-  narrativeDiv.innerHTML = ""; // Clear existing content
-
-  // const p = document.createElement("p");
-  // if (currentMode === "temperature") {
-  //   p.textContent = "This chart shows the average daily cycle of body temperature in mice. The data has been smoothed over 30-minute intervals and aggregated over 14 days.";
-  // } else {
-  //   p.textContent = "This chart shows the average daily cycle of activity in mice. The data has been smoothed over 30-minute intervals and aggregated over 14 days.";
-  // }
-  // narrativeDiv.appendChild(p);
+  narrativeDiv.innerHTML = "";
 }
 
 // -----------------------
 // On DOMContentLoaded, set defaults based on URL parameters.
 document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
-  // Set mode if provided.
   const modeParam = urlParams.get("mode");
   if (modeParam) {
     currentMode = modeParam;
   }
-  // Set filter defaults and update checkbox states.
   const filterParam = urlParams.get("filter"); // "male" or "female"
   if (filterParam === "male") {
     selectedFilters = { male: true, estrus: false, "non-estrus": false };
@@ -666,5 +681,3 @@ window.addEventListener("resize", () => {
   updateDimensions();
   svg.select(".brush").call(brush.move, null);
 });
-
-
