@@ -357,6 +357,19 @@ function initializeChart() {
   updateBackground();
 }
 
+// --- NEW FUNCTION: controls the visibility of the Zoom Out button ---
+function updateResetButtonVisibility() {
+  const currentDomain = xScale.domain();
+  const isZoomed = currentDomain[0].getTime() !== originalXDomain[0].getTime() ||
+                   currentDomain[1].getTime() !== originalXDomain[1].getTime();
+  const resetButton = document.getElementById("resetBrush");
+  if (isZoomed) {
+    resetButton.style.display = "block";
+  } else {
+    resetButton.style.display = "none";
+  }
+}
+
 function updateBackground() {
   const greyStart = new Date(2023,0,1,12,0);
   const greyEnd = new Date(2023,0,1,23,59);
@@ -484,6 +497,7 @@ function updateChart() {
       .raise();
 }
 
+// --- UPDATED TOOLTIP FUNCTION ---
 function showTooltip(event, mouse) {
   const hoveredId = mouse.id;
   d3.selectAll(".mouse-line")
@@ -493,16 +507,18 @@ function showTooltip(event, mouse) {
   d3.selectAll(".mouse-line")
       .filter(d => d.id !== hoveredId)
       .attr("opacity", 0.5);
+
+  const message = hoveredId.includes("avg") ? "click to view all mice" : "click to learn more about this mouse";
+  let tooltipHTML = `<strong>${mouse.id}</strong><br>Gender: ${mouse.gender}<br>`;
+  if (mouse.gender !== "male" && mouse.type) {
+      tooltipHTML += `Type: ${mouse.type.replace("-", " ")}<br>`;
+  }
+  tooltipHTML += `<em>${message}</em>`;
   
   tooltip
     .style("left", `${event.pageX + 10}px`)
     .style("top", `${event.pageY + 10}px`)
-    .html(`
-      <strong>${mouse.id}</strong><br>
-      Gender: ${mouse.gender}<br>
-      ${mouse.type ? `Type: ${mouse.type.replace("-", " ")}` : ""}<br>
-      <em>click to learn more about this mouse</em>
-    `)
+    .html(tooltipHTML)
     .classed("visible", true);
 }
 
@@ -548,6 +564,7 @@ function brushed(event) {
       .attr("d", d => lineGenerator(d.data));
   
   svg.select(".brush").call(brush.move, null);
+  updateResetButtonVisibility();
 }
 
 function resetBrush() {
@@ -564,6 +581,7 @@ function resetBrush() {
   svg.selectAll(".mouse-line")
       .transition().duration(500)
       .attr("d", d => lineGenerator(d.data));
+  updateResetButtonVisibility();
 }
 
 function setupDataTypeButtons() {

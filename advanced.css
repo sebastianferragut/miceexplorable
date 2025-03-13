@@ -180,8 +180,15 @@ button:hover {
   opacity: 1;
 }
 
-/* Advanced chart container styling */
 #advanced-chart {
-  /* Adjusted to work well within the scaled layout */
+  position: relative; /* Allow absolute positioning inside the chart */
   min-height: 500px;
+}
+
+/* Position the Zoom Out button on the bottom right of the chart, slightly below so the axis is visible */
+#resetBrush {
+  position: absolute;
+  bottom: -30px;  /* Lowered below the chart */
+  right: 10px;
+  z-index: 100;
 }

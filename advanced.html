@@ -34,7 +34,10 @@
       </div>
     <!-- Container for advanced chart and controls -->
     <div id="advanced-container">
-      <div id="advanced-chart"></div>
+      <!-- The chart container now holds the zoom out button -->
+      <div id="advanced-chart">
+        <button id="resetBrush" style="display: none;">Zoom Out</button>
+      </div>
       <div id="advanced-controls">
         <div id="advanced-legend">
           <label class="legend-item">
@@ -53,15 +56,10 @@
             Females (Non‑Estrus)
           </label>
         </div>
-        <div id="reset-container">
-          <button id="resetBrush">Reset Scope</button>
-        </div>
       </div>
     </div>
   
     <div id="narrative-advanced"></div>
-  
-
   
     <!-- Annotation text -->
     <p id="summary-annotation">
