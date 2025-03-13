@@ -1,104 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"> <!-- General styles -->
   <link rel="icon" href="imgs/micefav.svg" type="image/svg+xml">
-  <!-- The advanced chart uses D3 v7 via our main.js module -->
-  <script type="module" src="main.js"></script>
-  <script type="module" src="scrollstory.js"></script>
-  <script type="module" src="piechart.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <title>Mice Scrollytelling</title>
+  <title>Of Mice and Medicine</title>
 </head>
+
 <body>
-  <h1>Of Mice and Medicine</h1>
+  <h1><a href="/home.html"><img src="imgs/micefav.svg" width="100" alt="Of Mice and Medicine"></a>
+  Of Mice and Medicine</h1>
   <h2>The Impact of Biological Sex on Body Temperature and Activity</h2>
-  
-  <!-- Container for advanced chart and its controls -->
-  <div id="advanced-container">
-    <div id="advanced-chart"></div>
-    <div id="advanced-controls">
-      <div id="advanced-legend">
-        <label class="legend-item">
-          <input type="checkbox" id="maleCheckbox" checked>
-          <span class="legend-color" style="background-color: #3690c0;"></span>
-          Males
-        </label>
-        <label class="legend-item">
-          <input type="checkbox" id="estrusCheckbox" checked>
-          <span class="legend-color" style="background-color: #ff0000;"></span>
-          Females (Estrus)
-        </label>
-        <label class="legend-item">
-          <input type="checkbox" id="nonEstrusCheckbox" checked>
-          <span class="legend-color" style="background-color: #ffa500;"></span>
-          Females (Non‑Estrus)
-        </label>
-      </div>
-      <div id="reset-container">
-        <button id="resetBrush">Reset Scope</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Buttons to select either temperature or activity data -->
-  <div id="button-container">
-    <button id="temp-button">Temperature</button>
-    <button id="activity-button">Activity</button>
-  </div>
 
-  <!-- Create div for tooltips for summary-chart -->
-  <dl id="summary-tooltip">
-    <dt>Mouse ID</dt>
-    <dd id="summary-tooltip-id"></dd>
-    <dt>Gender</dt>
-    <dd id="summary-tooltip-gender"></dd>
-  </dl>
+  <p>
+    Even a subtle change can create a large impact. When examining biological data, this principle applies more than ever.
+  <br></br>
+The study we visualize observed the core body temperature and activity levels of male and female mice.</br>Minute-level data for these heath measurements were collected over a period of 14 days,</br>in which 12-hour light cycles were used to control circadian rhythms.
+<br></br>
+<i>Let’s explore the data to gain insights on sex differences and how estrus cycles influence these measurements.</i><br></br><b>Click on the mice at the top to get started!</b>
 
-  <!-- Annotation text -->
-  <p id="summary-annotation">
-    Daily core body temperature and activity levels of mice, recorded over 14 days and smoothed over 30-minute intervals.<br>
-    Dark pink and dark blue represent average measurements across subjects for female and male mice, respectively.<br>
-    Light pink and light blue represent individual average measurements for female and male mice, respectively.
   </p>
 
-  <div id="piechart"></div>
-  <div id="temp-pie-chart"></div>
-  <div id="activity-pie-chart"></div>
-    
-  <!-- TEMPORARY MOUSE ID SELECTOR -->
-  <div id="mouse-selector">
-    <label for="mouse-dropdown">Select a Mouse ID to explore the study:</label>
-    <select id="mouse-dropdown">
-      <option value="1">Mice ID 1</option>
-      <option value="2">Mice ID 2</option>
-      <option value="3">Mice ID 3</option>
-      <option value="4">Mice ID 4</option>
-      <option value="5">Mice ID 5</option>
-      <option value="6">Mice ID 6</option>
-      <option value="7">Mice ID 7</option>
-      <option value="8">Mice ID 8</option>
-      <option value="9">Mice ID 9</option>
-      <option value="10">Mice ID 10</option>
-      <option value="11">Mice ID 11</option>
-      <option value="12">Mice ID 12</option>
-      <option value="13">Mice ID 13</option>
-    </select>
-  </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const transitionElement = document.createElement("div");
+    transitionElement.classList.add("page-transition");
 
-  <!-- Divs for scroll container with comparative gender graphs -->
-  <div id="scroll-indicator"></div>
-  <div id="scroll-container">
-    <div id="scroller">
-      <div id="spacer"></div>
-      <div id="scroll-text"></div>
-    </div>
-    <div id="chart-container">
-      <div id="temp-chart"></div>
-      <div id="act-chart"></div>
-    </div>
-  </div>
+    // Add image inside the transition div
+    const image = document.createElement("img");
+    image.src = "imgs/mice.svg"; // Replace with your image path
+    image.alt = "Loading...";
+    
+    transitionElement.appendChild(image);
+    document.body.appendChild(transitionElement);
+
+    setTimeout(() => {
+      transitionElement.classList.add("hidden");
+    }, 200); // Fade out faster
+
+    document.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const href = link.getAttribute("href");
+
+        transitionElement.classList.remove("hidden");
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 200);
+      });
+    });
+  });
+</script>
 </body>
+
 </html>

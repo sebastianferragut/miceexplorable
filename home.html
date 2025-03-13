@@ -10,21 +10,16 @@
   <!-- Include the pie chart code -->
   <script type="module" src="piechart.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <title>Of Mice and Medicine - Home</title>
+  <title>Of Mice and Medicine</title>
 </head>
 
 <body>
    <!-- Navigation button to go to the advanced chart page -->
   <button id="to-advanced" class="to-advanced">Go to Advanced Chart</button>
-  <h1><img src="imgs/micefav.svg" width="100"> Of Mice and Medicine</h1>
-  <h2>The Impact of Biological Sex on Body Temperature and Activity</h2>
-
+  <h1>Temperature and Activity Distributions</h1>
 
   <p>
-    This study conducted research on both female and male mice observing their body temperature and activity levels. The
-    data was collected over a period of 14 days with data down to the minute. Using lights they were able to control the
-    daily cycles of the mice, allowing us to observe the impact of biological differences between the animals. Below are
-    general visualizations to explore the data. Click on one of them to learn more about the subject.
+    The pie charts below show the average hourly distributions of temperature and activity for male and female mice across the 14 days.</br><b>Use the scroll box on the left to see how these distributions change throughout the day. </b><i>What do you notice?</i>
   </p>
 
   <!-- Containers for pie charts -->
@@ -43,16 +38,7 @@
   <!-- Narrative text for piecharts -->
   <div id="narrative_pies">
     <p>
-      The pie charts above show the distribution of temperature and activity across male and female mice.
-      We can see that overall, female mice are clustered around higher temperatures in comparison to male mice.
-      This reveals insights about gender differences in mice: female mice undergo estrus, the reproductive cycle for
-      mice.
-      This cycle can cause a rise in body temperature. Curiously, we see a slight drop in activity overall for female
-      mice
-      in comparison to male mice at the higher ranges. This could be due to the estrus cycle, which may cause a decrease
-      in activity. Explore the advanced chart to gain more insights with time-specific visualizations for all mice, as
-      well
-      as specific mice tracked through the study.
+      We can see that overall, the temperature of female mice tends to be higher in comparison to male mice.</br>There is also a slight discrepancy between the female and male activity distributions at higher ranges.</br><i>But why is this so? </i><b>Click on a pie slice to learn more.</b>
     </p>
     <script>
       document.getElementById('to-advanced').addEventListener('click', () => {
