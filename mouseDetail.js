@@ -364,28 +364,7 @@ function updateChart(currentTime) {
   
   const filteredMale = smoothedMaleGlobal.filter(d => d.time >= filterStart && d.time <= filterEnd);
   malePath.datum(filteredMale)
-    .attr("d", lineGenerator)
-    // Only use mouse events when animation is finished.
-    .on("mousemove", function(event) {
-      if (phase === 2) {
-        const mouseTime = xScale.invert(d3.pointer(event)[0]);
-        const bisect = d3.bisector(d => d.time).left;
-        const idx = bisect(filteredMale, mouseTime);
-        const d0 = filteredMale[idx - 1] || filteredMale[0];
-        const d1 = filteredMale[idx] || filteredMale[filteredMale.length - 1];
-        const dClosest = mouseTime - d0.time < d1.time - mouseTime ? d0 : d1;
-        d3.select("#detail-tooltip")
-          .style("left", (event.pageX + 15) + "px")
-          .style("top", (event.pageY - 15) + "px")
-          .html(`Male Mouse ${mouseNumber}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>${dataLabel}: ${d3.format(".2f")(dClosest.value)}${unitLabel}`)
-          .style("display", "block");
-      }
-    })
-    .on("mouseout", () => {
-      if (phase === 2) {
-        d3.select("#detail-tooltip").style("display", "none");
-      }
-    });
+    .attr("d", lineGenerator);
   
   femaleLineGroup.selectAll("path").remove();
   femaleSegmentsGlobal.forEach(segment => {
@@ -396,27 +375,7 @@ function updateChart(currentTime) {
         .attr("fill", "none")
         .attr("stroke", segment.estrus ? "#d93d5f" : "lightpink")
         .attr("stroke-width", 2)
-        .attr("d", lineGenerator)
-        .on("mousemove", function(event) {
-          if (phase === 2) {
-            const mouseTime = xScale.invert(d3.pointer(event)[0]);
-            const bisect = d3.bisector(d => d.time).left;
-            const idx = bisect(filteredSegment, mouseTime);
-            const d0 = filteredSegment[idx - 1] || filteredSegment[0];
-            const d1 = filteredSegment[idx] || filteredSegment[filteredSegment.length - 1];
-            const dClosest = mouseTime - d0.time < d1.time - mouseTime ? d0 : d1;
-            d3.select("#detail-tooltip")
-              .style("left", (event.pageX + 15) + "px")
-              .style("top", (event.pageY - 15) + "px")
-              .html(`Female Mouse ${mouseNumber} ${segment.estrus ? "(Estrus)" : "(Non-Estrus)"}<br/>Time: ${d3.timeFormat("%b %d, %H:%M")(dClosest.time)}<br/>${dataLabel}: ${d3.format(".2f")(dClosest.value)}${unitLabel}`)
-              .style("display", "block");
-          }
-        })
-        .on("mouseout", () => {
-          if (phase === 2) {
-            d3.select("#detail-tooltip").style("display", "none");
-          }
-        });
+        .attr("d", lineGenerator);
     }
   });
   
@@ -457,28 +416,58 @@ function updateChart(currentTime) {
 }
 
 // -----------------------
-// Function to update the live info box during animation (phase 1).
-function updateLiveTooltip() {
-  if (phase !== 1) return;
-  // Compute the current male and female values up to currentSimTime.
-  const maleData = smoothedMaleGlobal.filter(d => d.time <= currentSimTime);
-  const femaleData = femaleSegmentsGlobal.flatMap(segment => segment.data)
-                        .filter(d => d.time <= currentSimTime);
-  if(maleData.length === 0 || femaleData.length === 0) return;
-  const maleVal = maleData[maleData.length - 1].value;
-  const femaleVal = femaleData[femaleData.length - 1].value;
-  const maleDiff = maleVal - femaleVal;
-  const femaleDiff = femaleVal - maleVal;
-  const maleDiffColor = maleDiff >= 0 ? "green" : "red";
-  const femaleDiffColor = femaleDiff >= 0 ? "green" : "red";
+// New function: updateSummary displays the live (or final) summary table under the chart.
+function updateSummary(currentTime) {
+  const dataLabel = mode === "activity" ? "Activity" : "Temperature";
+  const unitLabel = mode === "activity" ? "" : "°C";
+  let maxMale, minMale, maxFemale, minFemale;
+  let maxLabel, minLabel;
   
-  d3.select("#detail-tooltip")
-    .html(`<div style="font-size:18px;">Male: ${maleVal.toFixed(2)} (<span style="color:${maleDiffColor};">${(maleDiff >= 0 ? "+" : "") + maleDiff.toFixed(2)}</span>)</div>
-           <div style="font-size:18px;">Female: ${femaleVal.toFixed(2)} (<span style="color:${femaleDiffColor};">${(femaleDiff >= 0 ? "+" : "") + femaleDiff.toFixed(2)}</span>)</div>`)
-    .style("display", "block")
-    // Position the box to the right of the chart.
-    .style("left", (container.getBoundingClientRect().right + 15) + "px")
-    .style("top", (container.getBoundingClientRect().top + margin.top) + "px");
+  if (currentTime < experimentEnd) {
+    // Current values during animation (phase 1)
+    const maleData = smoothedMaleGlobal.filter(d => d.time <= currentTime);
+    const femaleData = femaleSegmentsGlobal.flatMap(segment => segment.data)
+                             .filter(d => d.time <= currentTime);
+    maxMale = d3.max(maleData, d => d.value);
+    minMale = d3.min(maleData, d => d.value);
+    maxFemale = d3.max(femaleData, d => d.value);
+    minFemale = d3.min(femaleData, d => d.value);
+    maxLabel = "(current) Maximum";
+    minLabel = "(current) Minimum";
+  } else {
+    // Final values after animation (phase 2)
+    maxMale = d3.max(smoothedMaleGlobal, d => d.value);
+    minMale = d3.min(smoothedMaleGlobal, d => d.value);
+    maxFemale = d3.max(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
+    minFemale = d3.min(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
+    maxLabel = "Maximum";
+    minLabel = "Minimum";
+  }
+  
+  const tableHTML = `
+    <table class="summary-table">
+      <tr>
+        <th colspan="3">Summary for ${dataLabel} Data (Mouse ID: ${mouseNumber})</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>Male</th>
+        <th>Female</th>
+      </tr>
+      <tr>
+        <td>${maxLabel}</td>
+        <td>${maxMale ? maxMale.toFixed(2) + unitLabel : "N/A"}</td>
+        <td>${maxFemale ? maxFemale.toFixed(2) + unitLabel : "N/A"}</td>
+      </tr>
+      <tr>
+        <td>${minLabel}</td>
+        <td>${minMale ? minMale.toFixed(2) + unitLabel : "N/A"}</td>
+        <td>${minFemale ? minFemale.toFixed(2) + unitLabel : "N/A"}</td>
+      </tr>
+    </table>
+  `;
+  
+  d3.select("#dynamic-narrative").html(tableHTML);
 }
 
 // -----------------------
@@ -491,16 +480,14 @@ function runAnimation(startTime) {
   phase = 1;
   animationTimer = d3.interval(() => {
     currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
-    updateNarrative(currentSimTime); // Update the narrative text
+    updateSummary(currentSimTime);
     updateChart(currentSimTime);
-    // During animation, update the live info box.
-    if (phase === 1) updateLiveTooltip();
     if (currentSimTime > experimentEnd) {
       animationTimer.stop();
       phase = 2;
       updateChart(experimentEnd);
-      // Remove the live info box after animation finishes.
-      d3.select("#detail-tooltip").style("display", "none");
+      // Update summary with final values.
+      updateSummary(experimentEnd);
       d3.select("#reset-scope-button").style("display", "block");
     }
   }, 50);
@@ -544,7 +531,7 @@ function skipToEnd() {
   }
   phase = 2;
   currentSimTime = experimentEnd;
-  updateNarrative(currentSimTime); 
+  updateSummary(currentSimTime);
   updateChart(currentSimTime);
   d3.timeout(() => {
     phase = 2;
@@ -574,12 +561,11 @@ function skipToEnd() {
             return d3.interpolateString(previous, current);
           });
     });
-    // Hide pause and skip buttons and show reset scope button.
     d3.select("#pause-button").style("display", "none");
     d3.select("#skip-end-button").style("display", "none");
     d3.select("#reset-scope-button").style("display", "inline-block");
-    // Remove the live info box.
-    d3.select("#detail-tooltip").style("display", "none");
+    // Update summary with final values.
+    updateSummary(experimentEnd);
     enableBrush();
   }, 500);
 }
@@ -596,6 +582,7 @@ d3.select("#reset-scope-button").on("click", () => {
   gXAxis.transition().duration(750).call(xAxis);
   updateChart(currentSimTime);
 });
+
 
 // -----------------------
 // Scrubbing functionality.
@@ -626,6 +613,7 @@ function scrubMove(event) {
     const [x] = d3.pointer(event);
     currentSimTime = fullTimeScale.invert(x);
     updateChart(currentSimTime);
+    updateSummary(currentSimTime);
   }
 }
 
@@ -662,7 +650,6 @@ function brushed(event) {
 
 // -----------------------
 // Responsive resize.
-// Update both width and height based on the container.
 function updateDimensions() {
   container = d3.select("#detail-chart").node();
   width = container.clientWidth - margin.left - margin.right;
@@ -711,58 +698,6 @@ document.getElementById("home-button").addEventListener("click", () => {
 });
 
 // -----------------------
-// Function to update the narrative text based on the current simulation time.
-function updateNarrative(currentTime) {
-  const dayNumber = Math.floor((currentTime - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
-  const dataLabel = mode === "activity" ? "Activity" : "Temperature";
-  const unitLabel = mode === "activity" ? "" : "°C";
-  
-  if (dayNumber > 14) { 
-    // Overall maximum and minimum values.
-    const maxMaleValue = d3.max(smoothedMaleGlobal, d => d.value);
-    const minMaleValue = d3.min(smoothedMaleGlobal, d => d.value);
-    
-    const maxFemaleValue = d3.max(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
-    const minFemaleValue = d3.min(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
-    // Compute maximum absolute difference.
-    const maxDiff = Math.abs(maxFemaleValue - maxMaleValue);
-
-    // Display summary as a table.
-    d3.select("#dynamic-narrative").html(`
-      <table class="summary-table">
-        <tr><th colspan="2">Summary for ${dataLabel} Data (Mouse ID: ${mouseNumber})</th></tr>
-        <tr><td>Maximum ${dataLabel} (Male):</td><td>${maxMaleValue.toFixed(2)}${unitLabel}</td></tr>
-        <tr><td>Minimum ${dataLabel} (Male):</td><td>${minMaleValue.toFixed(2)}${unitLabel}</td></tr>
-        <tr><td>Maximum ${dataLabel} (Female):</td><td>${maxFemaleValue.toFixed(2)}${unitLabel}</td></tr>
-        <tr><td>Minimum ${dataLabel} (Female):</td><td>${minFemaleValue.toFixed(2)}${unitLabel}</td></tr>
-        <tr><td>Maximum Difference:</td><td>${maxDiff.toFixed(2)}${unitLabel}</td></tr>
-      </table>
-    `);
-  } else {
-    const currentDayMaleData = smoothedMaleGlobal.filter(d => {
-      const day = Math.floor((d.time - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
-      return day === dayNumber;
-    });
-    const currentDayFemaleData = femaleSegmentsGlobal.flatMap(segment => segment.data).filter(d => {
-      const day = Math.floor((d.time - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
-      return day === dayNumber;
-    });
-    
-    const maxMaleValue = d3.max(currentDayMaleData, d => d.value);
-    const maxFemaleValue = d3.max(currentDayFemaleData, d => d.value);
-    const minMaleValue = d3.min(currentDayMaleData, d => d.value);
-    const minFemaleValue = d3.min(currentDayFemaleData, d => d.value);
-
-    d3.select("#dynamic-narrative").html(`<br/>
-      Day ${dayNumber.toString().padStart(2, '0')}<br/> 
-      Current maximum ${dataLabel} from male mouse ID:${mouseNumber} is ${maxMaleValue.toFixed(2)}${unitLabel}.<br/>
-      Current minimum ${dataLabel} from male mouse ID:${mouseNumber} is ${minMaleValue.toFixed(2)}${unitLabel}.<br/>
-      Current maximum ${dataLabel} from female mouse ID:${mouseNumber} is ${maxFemaleValue.toFixed(2)}${unitLabel}.<br/>
-      Current minimum ${dataLabel} from female mouse ID:${mouseNumber} is ${minFemaleValue.toFixed(2)}${unitLabel}.
-    `);
-  }
-}
-
 // Append x-axis label
 svg.append("text")
   .attr("class", "x axis-label")
@@ -779,11 +714,8 @@ const yAxisLabel = svg.append("text")
   .attr("x", -height / 2)
   .attr("y", -margin.left + 20);
 
-// Update y-axis label based on mode
 function updateYAxisLabel() {
   const label = mode === "activity" ? "Activity" : "Temperature (°C)";
   yAxisLabel.text(label);
 }
-
-// Call updateYAxisLabel after setting the mode
 updateYAxisLabel();

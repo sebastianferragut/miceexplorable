@@ -70,6 +70,7 @@ button:hover {
 .legend-container {
     display: flex;
     gap: 15px;
+    padding: 10px;
     flex-wrap: wrap;
     align-items: center;
 }
@@ -131,3 +132,27 @@ button:hover {
     color: #8b8686;
     margin-top: 10px;
 }
+
+.tooltip {
+    display: none;
+  }
+  
+  /* Style the summary table displayed under the chart */
+  .summary-table {
+    width: 50%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .summary-table th,
+  .summary-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: center;
+  }
+  
+  .summary-table th {
+    background-color: #f4f4f4;
+  }
+  
