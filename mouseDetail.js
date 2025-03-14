@@ -111,7 +111,8 @@ const malePath = gData.append("path")
   .attr("fill", "none")
   .attr("stroke", "lightblue")
   .attr("stroke-width", 2);
-const femaleLineGroup = gData.append("g").attr("class", "female-line-group");
+const femaleLineGroup = gData.append("g")
+  .attr("class", "female-line-group");
 
 const lineGenerator = d3.line()
   .x(d => xScale(d.time))
@@ -285,8 +286,7 @@ function drawLegend() {
 
 function updateChart(currentTime) {
   if (!brushDomainActive) {
-    // Instead of having the current time at the very right, shift the domain so currentSimTime
-    // is at about 60% of the window (leaving blank space to the right).
+    // Shift the sliding window so currentSimTime is at ~60% of the domain width.
     let tentativeStart = d3.timeMinute.offset(currentTime, -0.6 * windowDurationMinutes);
     let windowStart = tentativeStart < experimentStart ? experimentStart : tentativeStart;
     let windowEnd = d3.timeMinute.offset(windowStart, windowDurationMinutes);
@@ -463,7 +463,7 @@ function runAnimation(startTime) {
   
   currentSimTime = startTime;
   phase = 1;
-  // Slow down the animation: use 100ms interval instead of 50ms.
+  // Slow down animation with 100ms intervals.
   animationTimer = d3.interval(() => {
     currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
     updateSummary(currentSimTime);
@@ -474,7 +474,8 @@ function runAnimation(startTime) {
       updateChart(experimentEnd);
       updateSummary(experimentEnd);
       d3.select("#reset-scope-button").style("display", "none");
-      addLineHoverTooltips(); // Enable hover tooltips after animation.
+      addLineHoverTooltips();
+      enableBrush();  // Re-enable panning after animation concludes.
     }
   }, 100);
 }
@@ -548,6 +549,7 @@ function skipToEnd() {
     d3.select("#reset-scope-button").style("display", "none");
     updateSummary(experimentEnd);
     addLineHoverTooltips();
+    enableBrush();  // Re-enable panning after skipping to end.
   }, 500);
 }
 
