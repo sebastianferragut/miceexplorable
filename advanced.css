@@ -3,15 +3,15 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  overflow-y: auto; /* changed from overflow: hidden to allow vertical scrolling */
+  overflow-y: auto;
 }
 
 /* Wrap the entire page content in a container that is scaled down */
 #main-container {
-  transform: scale(0.9);
+  transform: scale(0.8);           /* Reduced scale for smaller overall content */
   transform-origin: top left;
-  width: 111%;
-  height: 111%;
+  width: 125%;                     /* Adjusted so that the container still covers the page */
+  height: 125%;
 }
 
 body {
