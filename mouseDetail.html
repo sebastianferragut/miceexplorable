@@ -20,25 +20,28 @@
     Follow male{ID.number} and female{ID.number} throughout the course of the experiment and watch their body temperature change.
   </h2>
   
-  <!-- Wrap the chart and the new value box in a flex container -->
+  <!-- Container for chart and value box -->
   <div id="animation-container">
-    <div id="detail-chart"></div>
-    <!-- This box will display current values and differences during the animation (phase 1) -->
+    <div id="detail-chart">
+      <!-- Zoom Out button positioned inside the chart -->
+      <button id="reset-scope-button" style="display: none;">Zoom Out</button>
+    </div>
+    <!-- Fixed-size value box showing live differences during the animation -->
     <div id="value-box" style="display: none;"></div>
   </div>
   
-  <!-- This div now displays the live summary table -->
-  <div id="dynamic-narrative"></div>
+  <!-- Legend placed directly under the chart -->
+  <div id="legend"></div>
+  
+  <!-- Controls placed above the summary table -->
   <div id="controls">
     <button id="resetBrushDetail">Restart Animation</button>
     <button id="pause-button">Pause</button>
     <button id="skip-end-button">Skip to End</button>
-    <!-- This button is hidden initially and will appear after animation finishes -->
-    <button id="reset-scope-button" style="display: none;">Reset Scope</button>
     <button id="back-button">Back to All Mice</button>
   </div>
-  <div id="legend"></div>
-  <!-- Removed the tooltip element -->
-  <!-- <div id="detail-tooltip" class="tooltip" style="display:none; position:absolute;"></div> -->
+  
+  <!-- Summary table appears below the controls -->
+  <div id="dynamic-narrative"></div>
 </body>
 </html>

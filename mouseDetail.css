@@ -1,12 +1,13 @@
-/* Ensure the whole page fits within the viewport */
+/* Ensure the whole page fits within the viewport and allow vertical scrolling */
 html, body {
     margin: 0;
-    padding: 0;
+    padding: 10px; /* add some padding so nothing touches the window edges */
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     text-align: center;
+    box-sizing: border-box;
 }
 
 /* Container to hold both the chart and the value box side-by-side */
@@ -19,27 +20,38 @@ html, body {
     width: 90vw;
 }
 
+/* Chart container styling with extra left padding and centered */
 #detail-chart {
+    position: relative; /* For absolute positioning of the Zoom Out button */
     flex: 3;
     width: 100%;
     height: 60vh;
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
+    padding-left: 10px; /* extra left padding */
+    box-sizing: border-box;
 }
 
-/* New box for displaying current values and differences */
+/* Fixed size value box with increased dimensions and non-wrapping text */
 #value-box {
     flex: 1;
+    width: 250px;  /* increased fixed width */
+    height: 100px;  /* increased fixed height */
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px;
-    font-size: 16px;
+    padding: 5px;
+    font-size: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: visible;
+    box-sizing: border-box;
 }
 
 /* Helper classes for difference coloring */
@@ -50,11 +62,71 @@ html, body {
     color: red;
 }
 
-/* Existing styling below */
+/* Zoom Out button styling positioned at bottom right of chart and lowered further */
+#reset-scope-button {
+    position: absolute;
+    bottom: 50px;  /* lowered more */
+    right: 10px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Legend styling: arranged horizontally in one row */
+#legend {
+    margin: 10px auto;
+    width: 90vw;
+    max-width: 1000px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.legend-container {
+    display: flex;
+    gap: 15px;
+    padding: 0;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    margin: 5px;
+}
+.legend-swatch {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    border: 1px solid #000;
+    border-radius: 3px;
+}
+
+/* Styling for summary table */
+.summary-table {
+    margin: 10px auto;
+    border-collapse: collapse;
+    font-size: 16px;
+    width: auto;
+}
+.summary-table th, .summary-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+.summary-table th {
+    background-color: #f2f2f2;
+}
+
+/* Controls styling */
 #controls {
     margin-top: 10px;
 }
 
+/* Existing button styling */
 button {
     padding: 10px 20px;
     margin: 5px;
@@ -84,108 +156,3 @@ button:hover {
 .home-button:hover {
     background-color: #575757;
 }
-
-#legend {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 10px;
-}
-
-.legend-container {
-    display: flex;
-    gap: 15px;
-    padding: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-    margin: 5px;
-}
-
-.legend-swatch {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
-    border: 1px solid #000;
-    border-radius: 3px;
-}
-
-/* Style for the live info box */
-.tooltip {
-    background-color: rgba(0, 0, 0, 0.85);
-    color: #fff;
-    padding: 15px;
-    border-radius: 6px;
-    font-size: 18px;
-    pointer-events: none;
-    width: 220px;
-}
-
-/* Styling for the summary table after animation */
-.summary-table {
-    margin: 10px auto;
-    border-collapse: collapse;
-    font-size: 16px;
-    width: 80%;
-}
-
-.summary-table th, .summary-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-.summary-table th {
-    background-color: #f2f2f2;
-    text-align: center;
-}
-
-/* Styling for max lines (dashed) */
-.max-lines line {
-    stroke-width: 2;
-    stroke-dasharray: 4,2;
-}
-
-.scrub-overlay {
-    cursor: pointer;
-}
-
-#subheader {
-    font-size: 15px;
-    color: #8b8686;
-    margin-top: 10px;
-}
-
-.tooltip {
-    display: none;
-  }
-  
-  /* Style the summary table displayed under the chart */
-  .summary-table {
-    width: 50%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    font-family: Arial, sans-serif;
-  }
-  
-  .summary-table th,
-  .summary-table td {
-    border: 1px solid #ccc;
-    padding: 6px;
-    text-align: center;
-  }
-  
-  .summary-table th {
-    background-color: #f4f4f4;
-  }
-  

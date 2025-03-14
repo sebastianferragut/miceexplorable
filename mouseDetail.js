@@ -10,6 +10,8 @@ let height = container.clientHeight - margin.top - margin.bottom;
 
 const svg = d3.select("#detail-chart")
   .append("svg")
+    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
@@ -300,7 +302,7 @@ function drawLegend() {
   
   // New legend for max lines.
   const maxLegendContainer = legendDiv.append("div")
-    .attr("class", "legend-container max-legend");
+    .attr("class", "legend-container");
   const maxLegendItems = [
     { label: "Max Male", color: "lightblue", dash: "4,2" },
     { label: "Max Female", color: "#d93d5f", dash: "4,2" }
@@ -431,11 +433,12 @@ function updateChart(currentTime) {
       const maleDiffClass = diffMale > 0 ? "positive" : (diffMale < 0 ? "negative" : "");
       const femaleDiffClass = diffFemale > 0 ? "positive" : (diffFemale < 0 ? "negative" : "");
       
+      // Use padStart to ensure fixed-width display (assuming largest number is three digits)
       d3.select("#value-box")
         .style("display", "flex")
         .html(`
-          <p>Male: ${currentMaleValue.toFixed(2)} (<span class="${maleDiffClass}">${diffMale.toFixed(2)}</span>)</p>
-          <p>Female: ${currentFemaleValue.toFixed(2)} (<span class="${femaleDiffClass}">${diffFemale.toFixed(2)}</span>)</p>
+          <p>Male: ${currentMaleValue.toFixed(2).padStart(6, ' ')} (<span class="${maleDiffClass}">${diffMale.toFixed(2).padStart(6, ' ')}</span>)</p>
+          <p>Female: ${currentFemaleValue.toFixed(2).padStart(6, ' ')} (<span class="${femaleDiffClass}">${diffFemale.toFixed(2).padStart(6, ' ')}</span>)</p>
         `);
     }
   } else {
@@ -473,6 +476,10 @@ function updateSummary(currentTime) {
     minLabel = "Minimum";
   }
   
+  // For activity mode, show 0 instead of "N/A" if no minimum value is present.
+  const minMaleDisplay = (minMale === null || minMale === undefined) ? (mode === "activity" ? "0" : "N/A") : minMale.toFixed(2) + unitLabel;
+  const minFemaleDisplay = (minFemale === null || minFemale === undefined) ? (mode === "activity" ? "0" : "N/A") : minFemale.toFixed(2) + unitLabel;
+  
   const tableHTML = `
     <table class="summary-table">
       <tr>
@@ -490,8 +497,8 @@ function updateSummary(currentTime) {
       </tr>
       <tr>
         <td>${minLabel}</td>
-        <td>${minMale ? minMale.toFixed(2) + unitLabel : "N/A"}</td>
-        <td>${minFemale ? minFemale.toFixed(2) + unitLabel : "N/A"}</td>
+        <td>${minMaleDisplay}</td>
+        <td>${minFemaleDisplay}</td>
       </tr>
     </table>
   `;
@@ -517,7 +524,8 @@ function runAnimation(startTime) {
       updateChart(experimentEnd);
       // Update summary with final values.
       updateSummary(experimentEnd);
-      d3.select("#reset-scope-button").style("display", "block");
+      // Hide Zoom Out button if visible.
+      d3.select("#reset-scope-button").style("display", "none");
     }
   }, 50);
 }
@@ -592,7 +600,8 @@ function skipToEnd() {
     });
     d3.select("#pause-button").style("display", "none");
     d3.select("#skip-end-button").style("display", "none");
-    d3.select("#reset-scope-button").style("display", "inline-block");
+    // Hide Zoom Out button when skipping to end.
+    d3.select("#reset-scope-button").style("display", "none");
     // Update summary with final values.
     updateSummary(experimentEnd);
     enableBrush();
@@ -604,14 +613,15 @@ d3.select("#skip-end-button").on("click", () => {
 });
 
 // -----------------------
-// Reset Scope button for brushing.
+// Zoom Out button for brushing (reset scope).
 d3.select("#reset-scope-button").on("click", () => {
   brushDomainActive = false;
   xScale.domain([experimentStart, experimentEnd]);
   gXAxis.transition().duration(750).call(xAxis);
   updateChart(currentSimTime);
+  d3.select("#reset-scope-button").style("display", "none");
 });
-  
+
 // -----------------------
 // Scrubbing functionality.
 function addScrubOverlay() {
@@ -674,6 +684,8 @@ function brushed(event) {
   drawBackground();
   updateChart(currentSimTime);
   svg.select(".brush-group").call(brush.move, null);
+  // Show the Zoom Out button when the graph is zoomed in.
+  d3.select("#reset-scope-button").style("display", "block");
 }
 
 // -----------------------
@@ -684,7 +696,8 @@ function updateDimensions() {
   height = container.clientHeight - margin.top - margin.bottom;
   d3.select("#detail-chart svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`);
   xScale.range([0, width]);
   fullTimeScale.range([0, width]);
   svg.select("#clip rect")
@@ -708,11 +721,12 @@ d3.select("#resetBrushDetail").on("click", () => {
   isPaused = false;
   d3.select("#pause-button").text("Pause").style("display", "inline-block");
   d3.select("#skip-end-button").style("display", "inline-block");
-  d3.select("#reset-scope-button").style("display", "none");
   currentSimTime = experimentStart;
   phase = 1;
   svg.select(".brush-group").remove();
   brushDomainActive = false;
+  // Hide Zoom Out button if visible.
+  d3.select("#reset-scope-button").style("display", "none");
   startAnimation();
 });
 d3.select("#back-button").on("click", () => {
