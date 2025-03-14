@@ -504,9 +504,10 @@ function transitionToFinal() {
     d3.select("#reset-scope-button").style("display", "none");
     
     updateSummary(experimentEnd);
-    addLineHoverTooltips();
     enableBrush();
+    
   }, 500);
+
 }
 
 function runAnimation(startTime) {
@@ -564,14 +565,26 @@ function skipToEnd() {
 
 d3.select("#skip-end-button").on("click", () => {
   skipToEnd();
+  d3.select("#controls").append("button")
+    .attr("id", "tooltip-button")
+    .text("Show Tooltips")
+    .on("click", () => {
+      addLineHoverTooltips();
+    });
+
+  d3.select("#controls").append("button")
+    .attr("id", "brush-button")
+    .text("Enable Brushing")
+    .on("click", () => {
+      enableBrush();
+    });
 });
 
 d3.select("#reset-scope-button").on("click", () => {
   brushDomainActive = false;
-  xScale.domain([experimentStart, experimentEnd]);
-  gXAxis.transition().duration(750).call(xAxis);
-  updateChart(currentSimTime);
+  transitionToFinal();
   d3.select("#reset-scope-button").style("display", "none");
+  enableBrush();
 });
 
 function addScrubOverlay() {
@@ -613,6 +626,7 @@ let brush = d3.brushX()
   .extent([[0, 0], [width, height]])
   .on("end", brushed);
 function enableBrush() {
+  svg.select(".tooltip-layer").remove();
   if (phase === 2) {
     if (svg.select(".brush-group").empty()) {
       svg.append("g")
@@ -623,6 +637,7 @@ function enableBrush() {
     }
   }
 }
+
 function brushed(event) {
   if (!event.selection) return;
   brushDomainActive = true;
@@ -660,6 +675,8 @@ function updateDimensions() {
 window.addEventListener("resize", updateDimensions);
 
 d3.select("#resetBrushDetail").on("click", () => {
+  d3.select("#tooltip-button").remove();
+  d3.select("#brush-button").remove();
   pauseAnimation();
   isPaused = false;
   d3.select("#pause-button").text("Pause").style("display", "inline-block");
@@ -708,35 +725,44 @@ function getNearestValue(dataSeries, time) {
 }
 
 function addLineHoverTooltips() {
-  malePath.on("mousemove", function(event) {
-    const [mx] = d3.pointer(event);
-    const t = xScale.invert(mx);
-    const nearest = getNearestValue(smoothedMaleGlobal, t);
-    if (nearest) {
+  const tooltipLayer = svg.append("g").attr("class", "tooltip-layer");
+  const overlay = tooltipLayer.append("rect")
+    .attr("class", "overlay")
+    .attr("width", width)
+    .attr("height", height)
+    .style("fill", "none")
+    .style("pointer-events", "all");
+
+  overlay.on("mousemove", function(event) {
+    const [x] = d3.pointer(event);
+    const time = xScale.invert(x);
+    const nearestMale = getNearestValue(smoothedMaleGlobal, time);
+    const nearestFemale = getNearestValue(femaleSegmentsGlobal.flatMap(segment => segment.data), time);
+
+    if (nearestMale && nearestFemale) {
+      const chartRect = container.getBoundingClientRect();
+      const maleX = xScale(nearestMale.time) + chartRect.left + window.scrollX;
+      const maleY = yScale(nearestMale.value) + chartRect.top + window.scrollY;
+      const femaleX = xScale(nearestFemale.time) + chartRect.left + window.scrollX;
+      const femaleY = yScale(nearestFemale.value) + chartRect.top + window.scrollY;
+
       d3.select("#tooltip-male")
-        .html(`Male: ${nearest.value.toFixed(2)}`)
-        .style("display", "block")
-        .style("left", (d3.pointer(event, document.body)[0] + 10) + "px")
-        .style("top", (d3.pointer(event, document.body)[1] - 20) + "px");
+        .html(`Male: ${nearestMale.value.toFixed(2)}`)
+        .style("left", (maleX + 10) + "px")
+        .style("top", (maleY - 20) + "px")
+        .style("display", "block");
+
+      d3.select("#tooltip-female")
+        .html(`Female: ${nearestFemale.value.toFixed(2)}`)
+        .style("left", (femaleX + 10) + "px")
+        .style("top", (femaleY - 20) + "px")
+        .style("display", "block");
+    } else {
+      d3.select("#tooltip-male").style("display", "none");
+      d3.select("#tooltip-female").style("display", "none");
     }
   }).on("mouseout", function() {
     d3.select("#tooltip-male").style("display", "none");
+    d3.select("#tooltip-female").style("display", "none");
   });
-  
-  femaleLineGroup.selectAll("path")
-    .on("mousemove", function(event, d) {
-      const [mx] = d3.pointer(event);
-      const t = xScale.invert(mx);
-      const nearest = getNearestValue(d, t);
-      if (nearest) {
-        d3.select("#tooltip-female")
-          .html(`Female: ${nearest.value.toFixed(2)}`)
-          .style("display", "block")
-          .style("left", (d3.pointer(event, document.body)[0] + 10) + "px")
-          .style("top", (d3.pointer(event, document.body)[1] - 20) + "px");
-      }
-    })
-    .on("mouseout", function() {
-      d3.select("#tooltip-female").style("display", "none");
-    });
 }

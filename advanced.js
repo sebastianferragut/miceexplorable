@@ -459,6 +459,7 @@ function updateChart() {
       .transition().duration(d => d.id.includes("avg") ? 250 : 600)
           .attr("d", d => lineGenerator(d.data));
   
+  
   hitPaths.exit().remove();
   
   // Create visible paths
@@ -507,7 +508,7 @@ function showTooltip(event, mouse) {
   d3.selectAll(".mouse-line")
       .filter(d => d.id !== hoveredId)
       .attr("opacity", 0.5);
-
+      
   const message = hoveredId.includes("avg") ? "click to view all mice" : "click to learn more about this mouse";
   let tooltipHTML = `<strong>${mouse.id}</strong><br>Gender: ${mouse.gender}<br>`;
   if (mouse.gender !== "male" && mouse.type) {
@@ -516,16 +517,16 @@ function showTooltip(event, mouse) {
   tooltipHTML += `<em>${message}</em>`;
   
   tooltip
-    .style("left", `${event.pageX + 10}px`)
-    .style("top", `${event.pageY + 10}px`)
+    .style("left", `${event.clientX + 10}px`)
+    .style("top", `${event.clientY - 150}px`)
     .html(tooltipHTML)
     .classed("visible", true);
 }
 
 function moveTooltip(event) {
   tooltip
-    .style("left", `${event.pageX + 10}px`)
-    .style("top", `${event.pageY + 10}px`);
+    .style("left", `${event.clientX + 10}px`)
+    .style("top", `${event.clientY - 150}px`);
 }
 
 function hideTooltip() {
