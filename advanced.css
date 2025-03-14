@@ -1,9 +1,9 @@
-/* Ensure the full viewport is used without scrolling */
+/* Ensure the full viewport is used but allow vertical scrolling */
 html, body {
   margin: 0;
   padding: 0;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto; /* changed from overflow: hidden to allow vertical scrolling */
 }
 
 /* Wrap the entire page content in a container that is scaled down */
