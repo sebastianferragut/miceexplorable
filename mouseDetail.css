@@ -9,16 +9,48 @@ html, body {
     text-align: center;
 }
 
-#detail-chart {
-    /* Use viewport-based dimensions */
-    width: 90vw;
-    height: 60vh;
+/* Container to hold both the chart and the value box side-by-side */
+#animation-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
     margin: 20px auto;
+    width: 90vw;
+}
+
+#detail-chart {
+    flex: 3;
+    width: 100%;
+    height: 60vh;
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
 }
 
+/* New box for displaying current values and differences */
+#value-box {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Helper classes for difference coloring */
+.positive {
+    color: green;
+}
+.negative {
+    color: red;
+}
+
+/* Existing styling below */
 #controls {
     margin-top: 10px;
 }
@@ -108,6 +140,7 @@ button:hover {
     font-size: 16px;
     width: 80%;
 }
+
 .summary-table th, .summary-table td {
     border: 1px solid #ddd;
     padding: 8px;

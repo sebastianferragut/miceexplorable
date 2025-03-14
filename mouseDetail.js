@@ -413,6 +413,35 @@ function updateChart(currentTime) {
       .attr("stroke", "#d93d5f")
       .attr("stroke-width", 2)
       .attr("stroke-dasharray", "4,2");
+      
+  // -----------------------
+  // New: Update the value box (to the right of the chart) during the animation phase.
+  if (phase === 1) {
+    // Retrieve the most recent male value from the smoothed series
+    const maleData = smoothedMaleGlobal.filter(d => d.time <= currentSimTime);
+    const currentMaleValue = maleData.length ? maleData[maleData.length - 1].value : null;
+    // Retrieve the most recent female value from the female segments
+    const femaleData = femaleSegmentsGlobal.flatMap(segment => segment.data)
+                              .filter(d => d.time <= currentSimTime);
+    const currentFemaleValue = femaleData.length ? femaleData[femaleData.length - 1].value : null;
+    
+    if (currentMaleValue !== null && currentFemaleValue !== null) {
+      const diffMale = currentMaleValue - currentFemaleValue;
+      const diffFemale = currentFemaleValue - currentMaleValue;
+      const maleDiffClass = diffMale > 0 ? "positive" : (diffMale < 0 ? "negative" : "");
+      const femaleDiffClass = diffFemale > 0 ? "positive" : (diffFemale < 0 ? "negative" : "");
+      
+      d3.select("#value-box")
+        .style("display", "flex")
+        .html(`
+          <p>Male: ${currentMaleValue.toFixed(2)} (<span class="${maleDiffClass}">${diffMale.toFixed(2)}</span>)</p>
+          <p>Female: ${currentFemaleValue.toFixed(2)} (<span class="${femaleDiffClass}">${diffFemale.toFixed(2)}</span>)</p>
+        `);
+    }
+  } else {
+    // Hide the value box when not in animation phase.
+    d3.select("#value-box").style("display", "none");
+  }
 }
 
 // -----------------------
@@ -582,8 +611,7 @@ d3.select("#reset-scope-button").on("click", () => {
   gXAxis.transition().duration(750).call(xAxis);
   updateChart(currentSimTime);
 });
-
-
+  
 // -----------------------
 // Scrubbing functionality.
 function addScrubOverlay() {

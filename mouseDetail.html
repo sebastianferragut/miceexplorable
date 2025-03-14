@@ -16,8 +16,17 @@
   
   <!-- The title will be updated by the JS to include the mouse ID and data type -->
   <h1 id="chart-title">Body Temperatures</h1>
-  <h2 id="subheader">Follow male{ID.number} and female{ID.number} throughout the course of the experiment and watch their body temperature change.</h2>
-  <div id="detail-chart"></div>
+  <h2 id="subheader">
+    Follow male{ID.number} and female{ID.number} throughout the course of the experiment and watch their body temperature change.
+  </h2>
+  
+  <!-- Wrap the chart and the new value box in a flex container -->
+  <div id="animation-container">
+    <div id="detail-chart"></div>
+    <!-- This box will display current values and differences during the animation (phase 1) -->
+    <div id="value-box" style="display: none;"></div>
+  </div>
+  
   <!-- This div now displays the live summary table -->
   <div id="dynamic-narrative"></div>
   <div id="controls">
