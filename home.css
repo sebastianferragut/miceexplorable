@@ -39,7 +39,8 @@ body {
 }
 
 .to-advanced {
-  position: absolute;
+  position: static;
+  float: right;
   top: 10px;
   left: 10px;
   padding: 10px 20px;
@@ -55,7 +56,8 @@ body {
 }
 
 .to-index {
-  position: absolute;
+  position: static;
+  float: left;
   top: 50px;
   left: 10px;
   padding: 10px 20px;

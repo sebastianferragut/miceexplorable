@@ -23,32 +23,34 @@
     The pie charts below show the average hourly distributions of temperature and activity for male and female mice across the 14 days.<br></br><b>Use the scroll box on the left to see how these distributions change throughout the day. </b><i>What do you notice?</i>
   </p>
 
-  <!-- Containers for pie charts -->
-
+  <!-- Scrolly Box Container -->
   <div id="scrollytelling">
     <div id="scroll-container">
       <div id="spacer"></div>
       <div id="items-container"></div>
     </div>
+    <!-- Temp Pie Chart Container -->
     <div id="piechart">
       <div id="temp-pie-chart"></div>
+      <!-- Narrative text for piecharts -->
+      <div id="narrative_pies">
+        <p>
+          We can see that overall, the temperature of female mice tends to be higher in comparison to male mice. There is also a slight discrepancy between the female and male activity distributions at higher ranges.<br></br><i>But why is this so? </i><b>Click on a pie slice to learn more.</b>
+        </p>
+        <script>
+          document.getElementById('to-advanced').addEventListener('click', () => {
+            window.location.href = 'advanced.html';
+          });
+          document.getElementById('to-index').addEventListener('click', () => {
+            window.location.href = 'index.html';
+          });
+        </script>
+      <!-- Activity Pie Chart Container -->
       <div id="activity-pie-chart"></div>
     </div>
   </div>
 
-  <!-- Narrative text for piecharts -->
-  <div id="narrative_pies">
-    <p>
-      We can see that overall, the temperature of female mice tends to be higher in comparison to male mice. There is also a slight discrepancy between the female and male activity distributions at higher ranges.<br></br><i>But why is this so? </i><b>Click on a pie slice to learn more.</b>
-    </p>
-    <script>
-      document.getElementById('to-advanced').addEventListener('click', () => {
-        window.location.href = 'advanced.html';
-      });
-      document.getElementById('to-index').addEventListener('click', () => {
-        window.location.href = 'index.html';
-      });
-    </script>
+
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
