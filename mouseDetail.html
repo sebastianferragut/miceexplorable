@@ -20,14 +20,12 @@
     Follow male{ID.number} and female{ID.number} throughout the course of the experiment and watch their body temperature change.
   </h2>
   
-  <!-- Container for chart and value box -->
+  <!-- Container for chart -->
   <div id="animation-container">
     <div id="detail-chart">
       <!-- Zoom Out button positioned inside the chart -->
       <button id="reset-scope-button" style="display: none;">Zoom Out</button>
     </div>
-    <!-- Fixed-size value box showing live differences during the animation -->
-    <div id="value-box" style="display: none;"></div>
   </div>
   
   <!-- Legend placed directly under the chart -->
@@ -43,5 +41,9 @@
   
   <!-- Summary table appears below the controls -->
   <div id="dynamic-narrative"></div>
+  
+  <!-- Tooltip elements (initially hidden) -->
+  <div id="tooltip-male" class="tooltip" style="display: none;"></div>
+  <div id="tooltip-female" class="tooltip" style="display: none;"></div>
 </body>
 </html>

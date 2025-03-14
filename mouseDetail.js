@@ -4,7 +4,6 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 // Set up margins, dimensions, and SVG container.
 const margin = { top: 50, right: 30, bottom: 50, left: 60 };
 let container = d3.select("#detail-chart").node();
-// Use viewport-based dimensions so the chart fits on screen.
 let width = container.clientWidth - margin.left - margin.right;
 let height = container.clientHeight - margin.top - margin.bottom;
 
@@ -28,12 +27,9 @@ defs.append("clipPath")
 
 // -----------------------
 // Create groups inside a clipping group.
-const gClip = svg.append("g")
-    .attr("clip-path", "url(#clip)");
-const gBackground = gClip.append("g")
-    .attr("class", "background-group");
-const gData = gClip.append("g")
-    .attr("class", "data-group");
+const gClip = svg.append("g").attr("clip-path", "url(#clip)");
+const gBackground = gClip.append("g").attr("class", "background-group");
+const gData = gClip.append("g").attr("class", "data-group");
 
 // -----------------------
 // Create a new group for the maximum value lines.
@@ -47,23 +43,18 @@ const gXAxis = svg.append("g")
 const gYAxis = svg.append("g")
     .attr("class", "y axis");
 
-// -----------------------
-// Scales.
 let xScale = d3.scaleTime().range([0, width]);
 let yScale = d3.scaleLinear().range([height, 0]);
 
-// A full timeline scale used for scrubbing.
 const fullTimeScale = d3.scaleTime()
     .domain([new Date(2023, 0, 1, 0, 0), d3.timeMinute.offset(new Date(2023, 0, 1, 0, 0), 14 * 1440)])
     .range([0, width]);
 
-// -----------------------
-// Experiment settings.
 const experimentStart = new Date(2023, 0, 1, 0, 0);
 const experimentDays = 14;
 const totalMinutes = experimentDays * 1440;
 const experimentEnd = d3.timeMinute.offset(experimentStart, totalMinutes);
-xScale.domain([experimentStart, experimentEnd]); // full domain
+xScale.domain([experimentStart, experimentEnd]);
 
 // -----------------------
 // Declare global variable "phase" early so it can be used by tick formatters.
@@ -74,8 +65,6 @@ let phase = 1;
 // Global flag to detect when the brush (interactive panning) is active.
 let brushDomainActive = false;
 
-// -----------------------
-// Custom Tick Functions.
 function getAnimationTickValues(start, end) {
   let ticks = d3.timeHour.every(3).range(start, end);
   let dayTicks = d3.timeDay.every(1).range(start, end);
@@ -96,12 +85,7 @@ function getFinalTickValues(start, end) {
 }
 function xTickFormat(d) {
   const dayNumber = Math.floor((d - experimentStart) / (1000 * 60 * 60 * 24)) + 1;
-  const hours = d.getHours();
-  if (hours === 0) {
-    return `Day ${dayNumber.toString().padStart(2, '0')}`;
-  } else {
-    return d3.timeFormat("%H:%M")(d);
-  }
+  return d.getHours() === 0 ? `Day ${dayNumber.toString().padStart(2, '0')}` : d3.timeFormat("%H:%M")(d);
 }
 
 let xAxis = d3.axisBottom(xScale)
@@ -115,32 +99,25 @@ gYAxis.call(yAxis);
 // -----------------------
 // Global variables for animation.
 let smoothedMaleGlobal, femaleSegmentsGlobal;
-let mouseNumber; // Set from URL.
-let currentSimTime = experimentStart; // simulation “current time”
+let mouseNumber;
+let currentSimTime = experimentStart;
 const windowDurationMinutes = 3 * 1440; // fixed sliding window of 3 days
 let animationTimer;
 let isPaused = false;
 let isScrubbing = false;
 
-// -----------------------
-// Data line groups.
 const malePath = gData.append("path")
   .attr("class", "male-line")
   .attr("fill", "none")
   .attr("stroke", "lightblue")
   .attr("stroke-width", 2);
-const femaleLineGroup = gData.append("g")
-  .attr("class", "female-line-group");
+const femaleLineGroup = gData.append("g").attr("class", "female-line-group");
 
-// -----------------------
-// Line generator.
 const lineGenerator = d3.line()
   .x(d => xScale(d.time))
   .y(d => yScale(d.value))
   .curve(d3.curveMonotoneX);
 
-// -----------------------
-// Draw background (lights off) in gBackground.
 function drawBackground() {
   gBackground.selectAll("rect").remove();
   for (let day = 0; day < experimentDays; day++) {
@@ -166,8 +143,6 @@ function drawBackground() {
 }
 drawBackground();
 
-// -----------------------
-// Smoothing function.
 function smoothSeries(data, windowSize) {
   return data.map((d, i, arr) => {
     const start = Math.max(0, i - Math.floor(windowSize / 2));
@@ -179,7 +154,6 @@ function smoothSeries(data, windowSize) {
 
 // -----------------------
 // Data loading.
-// Read URL parameters.
 const urlParams = new URLSearchParams(window.location.search);
 const mouseID = urlParams.get("mouseID");
 const mode = urlParams.get("mode") || "temperature";
@@ -187,10 +161,7 @@ const mode = urlParams.get("mode") || "temperature";
 if (!mouseID) {
   d3.select("body").append("p").text("No mouseID specified in URL.");
 } else {
-  // Extract mouse number (strip leading letter)
   mouseNumber = mouseID.replace(/^[mf]/i, "");
-  
-  // Update title and subtitle based on mode.
   if (mode === "activity") {
     d3.select("#chart-title").text(`Activity Levels of Male ${mouseNumber} and Female ${mouseNumber}`);
     d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their activity change.`);
@@ -199,7 +170,6 @@ if (!mouseID) {
     d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their body temperature change.`);
   }
   
-  // Determine CSV files based on mode.
   const maleFile = mode === "activity" ? "data/male_act.csv" : "data/male_temp.csv";
   const femFile = mode === "activity" ? "data/fem_act.csv" : "data/fem_temp.csv";
   
@@ -218,7 +188,8 @@ if (!mouseID) {
       time: d3.timeMinute.offset(experimentStart, i),
       value: +row[femaleKey]
     }));
-    const windowSize = 15; // minutes.
+    // Increase smoothing window for activity mode.
+    const windowSize = mode === "activity" ? 25 : 15;
     smoothedMaleGlobal = smoothSeries(maleSeries, windowSize);
     const smoothedFemale = smoothSeries(femaleSeries, windowSize);
     
@@ -248,8 +219,6 @@ if (!mouseID) {
     gYAxis.call(yAxis);
     
     drawLegend();
-    
-    // Remove any existing brush and disable brush mode during animation.
     svg.select(".brush-group").remove();
     brushDomainActive = false;
     
@@ -271,15 +240,10 @@ function isEstrus(time) {
   return ((day - 2) % 4 === 0);
 }
 
-// -----------------------
-// Legend drawing.
 function drawLegend() {
   const legendDiv = d3.select("#legend");
   legendDiv.html("");
-  
-  // Existing legend items.
-  const legendContainer = legendDiv.append("div")
-    .attr("class", "legend-container");
+  const legendContainer = legendDiv.append("div").attr("class", "legend-container");
   const legendItems = [
     { label: "Male", color: "lightblue", shape: "line" },
     { label: "Female (Estrus)", color: "#d93d5f", shape: "line" },
@@ -299,10 +263,7 @@ function drawLegend() {
     }
     itemDiv.append("span").text(item.label);
   });
-  
-  // New legend for max lines.
-  const maxLegendContainer = legendDiv.append("div")
-    .attr("class", "legend-container");
+  const maxLegendContainer = legendDiv.append("div").attr("class", "legend-container");
   const maxLegendItems = [
     { label: "Max Male", color: "lightblue", dash: "4,2" },
     { label: "Max Female", color: "#d93d5f", dash: "4,2" }
@@ -322,22 +283,16 @@ function drawLegend() {
   });
 }
 
-// -----------------------
-// Update chart for a given simulation time.
-// When brush mode is active, filter data using xScale.domain(); otherwise use currentSimTime.
 function updateChart(currentTime) {
   if (!brushDomainActive) {
-    const fixedWindowEnd = d3.timeMinute.offset(experimentStart, windowDurationMinutes);
-    let windowStart, windowEnd;
-    if (currentTime < fixedWindowEnd) {
-      windowStart = experimentStart;
-      windowEnd = fixedWindowEnd;
-    } else if (phase === 1) {
-      windowEnd = currentTime;
-      windowStart = d3.timeMinute.offset(currentTime, -windowDurationMinutes);
-    } else {
-      windowStart = experimentStart;
+    // Instead of having the current time at the very right, shift the domain so currentSimTime
+    // is at about 60% of the window (leaving blank space to the right).
+    let tentativeStart = d3.timeMinute.offset(currentTime, -0.6 * windowDurationMinutes);
+    let windowStart = tentativeStart < experimentStart ? experimentStart : tentativeStart;
+    let windowEnd = d3.timeMinute.offset(windowStart, windowDurationMinutes);
+    if (windowEnd > experimentEnd) {
       windowEnd = experimentEnd;
+      windowStart = d3.timeMinute.offset(windowEnd, -windowDurationMinutes);
     }
     xScale.domain([windowStart, windowEnd]);
   }
@@ -360,7 +315,6 @@ function updateChart(currentTime) {
     filterEnd = currentTime;
   }
   
-  // Define tooltip labels based on mode.
   const dataLabel = mode === "activity" ? "Activity" : "Temperature";
   const unitLabel = mode === "activity" ? "" : "°C";
   
@@ -381,16 +335,12 @@ function updateChart(currentTime) {
     }
   });
   
-  // -----------------------
-  // Update horizontal max value lines.
-  // For phase 1, compute max values up to currentSimTime; for phase 2, use full data.
   const maleDataForMax = smoothedMaleGlobal.filter(d => d.time <= (phase === 1 ? currentSimTime : experimentEnd));
   const femaleDataForMax = femaleSegmentsGlobal.flatMap(segment => segment.data)
                               .filter(d => d.time <= (phase === 1 ? currentSimTime : experimentEnd));
   const maleMax = d3.max(maleDataForMax, d => d.value);
   const femaleMax = d3.max(femaleDataForMax, d => d.value);
   
-  // Update or create male max line.
   gMaxLines.selectAll(".male-max-line")
     .data([maleMax])
     .join("line")
@@ -403,7 +353,6 @@ function updateChart(currentTime) {
       .attr("stroke-width", 2)
       .attr("stroke-dasharray", "4,2");
   
-  // Update or create female max line.
   gMaxLines.selectAll(".female-max-line")
     .data([femaleMax])
     .join("line")
@@ -416,39 +365,44 @@ function updateChart(currentTime) {
       .attr("stroke-width", 2)
       .attr("stroke-dasharray", "4,2");
       
-  // -----------------------
-  // New: Update the value box (to the right of the chart) during the animation phase.
+  // Tooltip handling during animation.
   if (phase === 1) {
-    // Retrieve the most recent male value from the smoothed series
     const maleData = smoothedMaleGlobal.filter(d => d.time <= currentSimTime);
-    const currentMaleValue = maleData.length ? maleData[maleData.length - 1].value : null;
-    // Retrieve the most recent female value from the female segments
+    const lastMale = maleData.length ? maleData[maleData.length - 1] : null;
     const femaleData = femaleSegmentsGlobal.flatMap(segment => segment.data)
                               .filter(d => d.time <= currentSimTime);
-    const currentFemaleValue = femaleData.length ? femaleData[femaleData.length - 1].value : null;
+    const lastFemale = femaleData.length ? femaleData[femaleData.length - 1] : null;
     
-    if (currentMaleValue !== null && currentFemaleValue !== null) {
-      const diffMale = currentMaleValue - currentFemaleValue;
-      const diffFemale = currentFemaleValue - currentMaleValue;
-      const maleDiffClass = diffMale > 0 ? "positive" : (diffMale < 0 ? "negative" : "");
-      const femaleDiffClass = diffFemale > 0 ? "positive" : (diffFemale < 0 ? "negative" : "");
+    if (lastMale && lastFemale) {
+      const diffMale = lastMale.value - lastFemale.value;
+      const diffFemale = lastFemale.value - lastMale.value;
       
-      // Use padStart to ensure fixed-width display (assuming largest number is three digits)
-      d3.select("#value-box")
-        .style("display", "flex")
-        .html(`
-          <p>Male: ${currentMaleValue.toFixed(2).padStart(6, ' ')} (<span class="${maleDiffClass}">${diffMale.toFixed(2).padStart(6, ' ')}</span>)</p>
-          <p>Female: ${currentFemaleValue.toFixed(2).padStart(6, ' ')} (<span class="${femaleDiffClass}">${diffFemale.toFixed(2).padStart(6, ' ')}</span>)</p>
-        `);
+      d3.select("#tooltip-male")
+        .html(`Male: ${lastMale.value.toFixed(2)} (${diffMale.toFixed(2)})`)
+        .style("display", "block");
+      d3.select("#tooltip-female")
+        .html(`Female: ${lastFemale.value.toFixed(2)} (${diffFemale.toFixed(2)})`)
+        .style("display", "block");
+      
+      const chartRect = container.getBoundingClientRect();
+      const maleX = xScale(lastMale.time) + chartRect.left + window.scrollX;
+      const maleY = yScale(lastMale.value) + chartRect.top + window.scrollY;
+      const femaleX = xScale(lastFemale.time) + chartRect.left + window.scrollX;
+      const femaleY = yScale(lastFemale.value) + chartRect.top + window.scrollY;
+      
+      d3.select("#tooltip-male")
+        .style("left", (maleX + 10) + "px")
+        .style("top", (maleY - 20) + "px");
+      d3.select("#tooltip-female")
+        .style("left", (femaleX + 10) + "px")
+        .style("top", (femaleY - 20) + "px");
     }
   } else {
-    // Hide the value box when not in animation phase.
-    d3.select("#value-box").style("display", "none");
+    d3.select("#tooltip-male").style("display", "none");
+    d3.select("#tooltip-female").style("display", "none");
   }
 }
 
-// -----------------------
-// New function: updateSummary displays the live (or final) summary table under the chart.
 function updateSummary(currentTime) {
   const dataLabel = mode === "activity" ? "Activity" : "Temperature";
   const unitLabel = mode === "activity" ? "" : "°C";
@@ -456,7 +410,6 @@ function updateSummary(currentTime) {
   let maxLabel, minLabel;
   
   if (currentTime < experimentEnd) {
-    // Current values during animation (phase 1)
     const maleData = smoothedMaleGlobal.filter(d => d.time <= currentTime);
     const femaleData = femaleSegmentsGlobal.flatMap(segment => segment.data)
                              .filter(d => d.time <= currentTime);
@@ -467,7 +420,6 @@ function updateSummary(currentTime) {
     maxLabel = "(current) Maximum";
     minLabel = "(current) Minimum";
   } else {
-    // Final values after animation (phase 2)
     maxMale = d3.max(smoothedMaleGlobal, d => d.value);
     minMale = d3.min(smoothedMaleGlobal, d => d.value);
     maxFemale = d3.max(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
@@ -476,7 +428,6 @@ function updateSummary(currentTime) {
     minLabel = "Minimum";
   }
   
-  // For activity mode, show 0 instead of "N/A" if no minimum value is present.
   const minMaleDisplay = (minMale === null || minMale === undefined) ? (mode === "activity" ? "0" : "N/A") : minMale.toFixed(2) + unitLabel;
   const minFemaleDisplay = (minFemale === null || minFemale === undefined) ? (mode === "activity" ? "0" : "N/A") : minFemale.toFixed(2) + unitLabel;
   
@@ -506,14 +457,13 @@ function updateSummary(currentTime) {
   d3.select("#dynamic-narrative").html(tableHTML);
 }
 
-// -----------------------
-// Animation loop functions.
 function runAnimation(startTime) {
   svg.select(".brush-group").remove();
   brushDomainActive = false;
   
   currentSimTime = startTime;
   phase = 1;
+  // Slow down the animation: use 100ms interval instead of 50ms.
   animationTimer = d3.interval(() => {
     currentSimTime = d3.timeMinute.offset(currentSimTime, 20);
     updateSummary(currentSimTime);
@@ -522,12 +472,11 @@ function runAnimation(startTime) {
       animationTimer.stop();
       phase = 2;
       updateChart(experimentEnd);
-      // Update summary with final values.
       updateSummary(experimentEnd);
-      // Hide Zoom Out button if visible.
       d3.select("#reset-scope-button").style("display", "none");
+      addLineHoverTooltips(); // Enable hover tooltips after animation.
     }
-  }, 50);
+  }, 100);
 }
 
 function startAnimation() {
@@ -545,8 +494,6 @@ function pauseAnimation() {
   }
 }
 
-// -----------------------
-// Pause/Resume button.
 d3.select("#pause-button").on("click", () => {
   if (!isPaused) {
     pauseAnimation();
@@ -559,8 +506,6 @@ d3.select("#pause-button").on("click", () => {
   }
 });
 
-// -----------------------
-// Skip to End button.
 function skipToEnd() {
   if (animationTimer) {
     animationTimer.stop();
@@ -600,11 +545,9 @@ function skipToEnd() {
     });
     d3.select("#pause-button").style("display", "none");
     d3.select("#skip-end-button").style("display", "none");
-    // Hide Zoom Out button when skipping to end.
     d3.select("#reset-scope-button").style("display", "none");
-    // Update summary with final values.
     updateSummary(experimentEnd);
-    enableBrush();
+    addLineHoverTooltips();
   }, 500);
 }
 
@@ -612,8 +555,6 @@ d3.select("#skip-end-button").on("click", () => {
   skipToEnd();
 });
 
-// -----------------------
-// Zoom Out button for brushing (reset scope).
 d3.select("#reset-scope-button").on("click", () => {
   brushDomainActive = false;
   xScale.domain([experimentStart, experimentEnd]);
@@ -622,8 +563,6 @@ d3.select("#reset-scope-button").on("click", () => {
   d3.select("#reset-scope-button").style("display", "none");
 });
 
-// -----------------------
-// Scrubbing functionality.
 function addScrubOverlay() {
   gClip.append("rect")
     .attr("class", "scrub-overlay")
@@ -659,8 +598,6 @@ function scrubEnd(event) {
   isScrubbing = false;
 }
 
-// -----------------------
-// Brush for selecting a time scope (only enabled after animation).
 let brush = d3.brushX()
   .extent([[0, 0], [width, height]])
   .on("end", brushed);
@@ -684,12 +621,9 @@ function brushed(event) {
   drawBackground();
   updateChart(currentSimTime);
   svg.select(".brush-group").call(brush.move, null);
-  // Show the Zoom Out button when the graph is zoomed in.
   d3.select("#reset-scope-button").style("display", "block");
 }
 
-// -----------------------
-// Responsive resize.
 function updateDimensions() {
   container = d3.select("#detail-chart").node();
   width = container.clientWidth - margin.left - margin.right;
@@ -714,8 +648,6 @@ function updateDimensions() {
 }
 window.addEventListener("resize", updateDimensions);
 
-// -----------------------
-// Reset Animation and Back buttons.
 d3.select("#resetBrushDetail").on("click", () => {
   pauseAnimation();
   isPaused = false;
@@ -725,7 +657,6 @@ d3.select("#resetBrushDetail").on("click", () => {
   phase = 1;
   svg.select(".brush-group").remove();
   brushDomainActive = false;
-  // Hide Zoom Out button if visible.
   d3.select("#reset-scope-button").style("display", "none");
   startAnimation();
 });
@@ -733,14 +664,10 @@ d3.select("#back-button").on("click", () => {
   window.location.href = "advanced.html";
 });
 
-// -----------------------
-// Home button: redirect to home.html.
 document.getElementById("home-button").addEventListener("click", () => {
   window.location.href = "home.html";
 });
 
-// -----------------------
-// Append x-axis label
 svg.append("text")
   .attr("class", "x axis-label")
   .attr("text-anchor", "middle")
@@ -748,7 +675,6 @@ svg.append("text")
   .attr("y", height + margin.bottom - 10)
   .text("Day | Time");
 
-// Append y-axis label
 const yAxisLabel = svg.append("text")
   .attr("class", "y axis-label")
   .attr("text-anchor", "middle")
@@ -761,3 +687,45 @@ function updateYAxisLabel() {
   yAxisLabel.text(label);
 }
 updateYAxisLabel();
+
+// --- Hover tooltips after animation ---
+function getNearestValue(dataSeries, time) {
+  const bisect = d3.bisector(d => d.time).left;
+  let index = bisect(dataSeries, time);
+  if (index >= dataSeries.length) index = dataSeries.length - 1;
+  return dataSeries[index];
+}
+
+function addLineHoverTooltips() {
+  malePath.on("mousemove", function(event) {
+    const [mx] = d3.pointer(event);
+    const t = xScale.invert(mx);
+    const nearest = getNearestValue(smoothedMaleGlobal, t);
+    if (nearest) {
+      d3.select("#tooltip-male")
+        .html(`Male: ${nearest.value.toFixed(2)}`)
+        .style("display", "block")
+        .style("left", (d3.pointer(event, document.body)[0] + 10) + "px")
+        .style("top", (d3.pointer(event, document.body)[1] - 20) + "px");
+    }
+  }).on("mouseout", function() {
+    d3.select("#tooltip-male").style("display", "none");
+  });
+  
+  femaleLineGroup.selectAll("path")
+    .on("mousemove", function(event, d) {
+      const [mx] = d3.pointer(event);
+      const t = xScale.invert(mx);
+      const nearest = getNearestValue(d, t);
+      if (nearest) {
+        d3.select("#tooltip-female")
+          .html(`Female: ${nearest.value.toFixed(2)}`)
+          .style("display", "block")
+          .style("left", (d3.pointer(event, document.body)[0] + 10) + "px")
+          .style("top", (d3.pointer(event, document.body)[1] - 20) + "px");
+      }
+    })
+    .on("mouseout", function() {
+      d3.select("#tooltip-female").style("display", "none");
+    });
+}
