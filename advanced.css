@@ -16,6 +16,7 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
+  font-size: 18px;
   background-color: #f4f4f4;
   text-align: center;
   position: relative;
@@ -34,7 +35,26 @@ body {
   cursor: pointer;
 }
 .home-button:hover {
-  background-color: #575757;
+  background-color: #3b54c4;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.t-button {
+  background-color: #a6a6a6;
+}
+
+.t-button:hover {
+  background-color: #3b54c4;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.a-button {
+  background-color: #a6a6a6;
+}
+
+.a-button:hover {
+  background-color: #3b54c4;
+  transition: background-color 0.3s ease-in-out;
 }
 
 #back-button {

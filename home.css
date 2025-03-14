@@ -50,8 +50,27 @@ body {
   cursor: pointer;
 }
 .to-advanced:hover {
-  background-color: #575757;
+  background-color: #3b54c4;
+  transition: background-color 0.3s ease-in-out;
 }
+
+.to-index {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  padding: 10px 20px;
+  background-color: #a6a6a6;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.to-index:hover {
+  background-color: #3b54c4;
+  transition: background-color 0.3s ease-in-out;
+}
+
+
 
 #spacer {
   position: absolute;

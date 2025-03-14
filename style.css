@@ -28,7 +28,16 @@ body {
     font-size: 16px;
   }
   button:hover {
-    background-color: #575757;
+    background-color: #3b54c4;
+  }
+
+  .hover-image {
+    border: 2px solid;
+    border-image: linear-gradient(to right, blue, pink) 1;
+  }
+  .hover-image:hover {
+    background-color: #87b3e5;
+    transition: background-color 0.3s ease-in-out;
   }
   
   .page-transition {
