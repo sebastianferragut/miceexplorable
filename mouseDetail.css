@@ -158,3 +158,22 @@ button:hover {
     background-color: #3b54c4;
     transition: background-color 0.3s ease-in-out;
 }
+
+/* Back button changed to static and placed at the top left corner */
+
+.back-button {
+    position: static;
+    display: block;
+    float: left;
+    margin: 10px;
+    padding: 20px 10px;
+    background-color: #a6a6a6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.home-button:hover {
+    background-color: #3b54c4;
+    transition: background-color 0.3s ease-in-out;
+}
