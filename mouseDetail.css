@@ -35,7 +35,7 @@ html, body {
     border: 1px solid #ddd;
     border-radius: 8px;
     padding-left: 10px;
-    padding-right: 10px;  /* right padding added */
+    padding-right: 10px;
     box-sizing: border-box;
 }
 
@@ -50,6 +50,7 @@ html, body {
     font-size: 12px;
     white-space: nowrap;
     z-index: 10;
+    transition: left 0.2s ease-out, top 0.2s ease-out; /* Smooth movement for tooltips */
 }
 
 /* Helper classes for difference coloring */
@@ -138,11 +139,12 @@ button:hover {
     background-color: #575757;
 }
 
-/* Home button fixed so it stays visible while scrolling */
+/* Home button changed to static and placed at the top right corner */
 .home-button {
-    position: fixed;
-    top: 10px;
-    right: 10px;
+    position: static;
+    display: block;
+    float: right;
+    margin: 10px;
     padding: 10px 20px;
     background-color: #a6a6a6;
     color: white;
