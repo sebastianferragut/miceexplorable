@@ -431,8 +431,8 @@ function updateSummary(currentTime) {
   const minMaleDisplay = (minMale === null || minMale === undefined) ? (mode === "activity" ? "0" : "N/A") : minMale.toFixed(2) + unitLabel;
   const minFemaleDisplay = (minFemale === null || minFemale === undefined) ? (mode === "activity" ? "0" : "N/A") : minFemale.toFixed(2) + unitLabel;
   
-  const tableHTML = `
-    <table class="summary-table">
+  const tableHTML = 
+    `<table class="summary-table">
       <tr>
         <th colspan="3">Summary for ${dataLabel} Data (Mouse ID: ${mouseNumber})</th>
       </tr>
@@ -451,10 +451,62 @@ function updateSummary(currentTime) {
         <td>${minMaleDisplay}</td>
         <td>${minFemaleDisplay}</td>
       </tr>
-    </table>
-  `;
+    </table>`;
   
   d3.select("#dynamic-narrative").html(tableHTML);
+}
+
+// -----------------------
+// FINAL TRANSITION FUNCTION
+function transitionToFinal() {
+  phase = 2;
+  currentSimTime = experimentEnd;
+  updateSummary(experimentEnd);
+  updateChart(experimentEnd);
+  d3.timeout(() => {
+    // Reset xScale to full range and transition the x-axis.
+    xScale.domain([experimentStart, experimentEnd]);
+    gXAxis.transition().duration(1000)
+      .call(xAxis.tickValues(getFinalTickValues(xScale.domain()[0], xScale.domain()[1]))
+        .tickFormat(xTickFormat));
+    drawBackground();
+    
+    // Transition the male line.
+    malePath.datum(smoothedMaleGlobal)
+      .transition().duration(1000)
+      .attrTween("d", function(d) {
+        let previous = d3.select(this).attr("d");
+        let current = lineGenerator(d);
+        return d3.interpolateString(previous, current);
+      });
+    
+    // Remove existing female paths and transition each segment.
+    femaleLineGroup.selectAll("path").remove();
+    femaleSegmentsGlobal.forEach(segment => {
+      const path = femaleLineGroup.append("path")
+        .datum(segment.data)
+        .attr("fill", "none")
+        .attr("stroke", segment.estrus ? "#d93d5f" : "lightpink")
+        .attr("stroke-width", 2)
+        // Start with a minimal line.
+        .attr("d", lineGenerator(segment.data.slice(0, 1)));
+      path.transition().duration(1000)
+          .attrTween("d", function(d) {
+            let previous = d3.select(this).attr("d");
+            let current = lineGenerator(d);
+            return d3.interpolateString(previous, current);
+          });
+    });
+    
+    // Hide buttons that are no longer needed.
+    d3.select("#pause-button").style("display", "none");
+    d3.select("#skip-end-button").style("display", "none");
+    d3.select("#reset-scope-button").style("display", "none");
+    
+    updateSummary(experimentEnd);
+    addLineHoverTooltips();
+    enableBrush();
+  }, 500);
 }
 
 function runAnimation(startTime) {
@@ -470,12 +522,7 @@ function runAnimation(startTime) {
     updateChart(currentSimTime);
     if (currentSimTime > experimentEnd) {
       animationTimer.stop();
-      phase = 2;
-      updateChart(experimentEnd);
-      updateSummary(experimentEnd);
-      d3.select("#reset-scope-button").style("display", "none");
-      addLineHoverTooltips();
-      enableBrush();  // Re-enable panning after animation concludes.
+      transitionToFinal();
     }
   }, 100);
 }
@@ -512,45 +559,7 @@ function skipToEnd() {
     animationTimer.stop();
     animationTimer = null;
   }
-  phase = 2;
-  currentSimTime = experimentEnd;
-  updateSummary(currentSimTime);
-  updateChart(currentSimTime);
-  d3.timeout(() => {
-    phase = 2;
-    xScale.domain([experimentStart, experimentEnd]);
-    gXAxis.transition().duration(1000)
-      .call(xAxis.tickValues(getFinalTickValues(xScale.domain()[0], xScale.domain()[1])).tickFormat(xTickFormat));
-    drawBackground();
-    malePath.datum(smoothedMaleGlobal)
-      .transition().duration(1000)
-      .attrTween("d", function(d) {
-        let previous = d3.select(this).attr("d");
-        let current = lineGenerator(d);
-        return d3.interpolateString(previous, current);
-      });
-    femaleLineGroup.selectAll("path").remove();
-    femaleSegmentsGlobal.forEach(segment => {
-      const path = femaleLineGroup.append("path")
-        .datum(segment.data)
-        .attr("fill", "none")
-        .attr("stroke", segment.estrus ? "#d93d5f" : "lightpink")
-        .attr("stroke-width", 2)
-        .attr("d", lineGenerator(segment.data.slice(0, 1)));
-      path.transition().duration(1000)
-          .attrTween("d", function(d) {
-            let previous = d3.select(this).attr("d");
-            let current = lineGenerator(d);
-            return d3.interpolateString(previous, current);
-          });
-    });
-    d3.select("#pause-button").style("display", "none");
-    d3.select("#skip-end-button").style("display", "none");
-    d3.select("#reset-scope-button").style("display", "none");
-    updateSummary(experimentEnd);
-    addLineHoverTooltips();
-    enableBrush();  // Re-enable panning after skipping to end.
-  }, 500);
+  transitionToFinal();
 }
 
 d3.select("#skip-end-button").on("click", () => {
