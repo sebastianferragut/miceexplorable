@@ -641,10 +641,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   d3.select("#resetBrush").on("click", resetBrush);
   
-  document.getElementById("home-button").addEventListener("click", () => {
-    window.location.href = "home.html";
+  document.getElementById("next-button").addEventListener("click", () => {
+    window.location.href = "mouseDetail.html";
   });
 });
+
+document.getElementById("back-button").addEventListener("click", () => {
+  window.location.href = "home.html";
+});
+
 
 window.addEventListener("resize", () => {
   updateDimensions();
