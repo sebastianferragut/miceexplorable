@@ -266,9 +266,8 @@ function updateScrollContent(temperatureData, activityData) {
         .enter()
         .append('div')
         .attr('class', 'hour-group')
-        .style("margin-bottom", "15px")
-        .style("padding", "10px")
-        .style("border-bottom", "1px solid #ddd");
+        .style("margin-block", "15px")
+        .style("border-bottom", "3px dashed #Ddd");
 
     // Append hour label
     hourContainer.append('dt')
