@@ -51,12 +51,12 @@ function categorizeData(data, minData, maxData, binsize) {
 function drawPieCharts(femaleBins, maleBins, dataType, divId) {
     d3.select(divId).select("svg").remove();
     const svg = d3.select(divId).append("svg")
-        .attr("width", 800) // Increased width for two pie charts
-        .attr("height", 400);
+        .attr("width", 1000) 
+        .attr("height", 500);
 
     const width = +svg.attr("width");
     const height = +svg.attr("height");
-    const radius = 140; // Size of each pie chart
+    const radius = 160; // Size of each pie chart
 
     // Use distinct color scales:
     const uniqueBins = Object.keys(femaleBins);
@@ -181,20 +181,20 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .data(uniqueBins)
         .enter()
         .append("rect")
-        .attr("x", 0)
-        .attr("y", (d, i) => i * 10 )
-        .attr("width", 10)
-        .attr("height", 10)
+        .attr("x", -15)
+        .attr("y", (d, i) => i * 20 )
+        .attr("width", 20)
+        .attr("height", 20)
         .attr("fill", (d, i) => colorScale(i));
 
     legendGroup.selectAll("text")
         .data(uniqueBins)
         .enter()
         .append("text")
-        .attr("x", 10)
-        .attr("y", (d, i) => i * 10 +10 )
+        .attr("x", 15)
+        .attr("y", (d, i) => i * 20 +15 )
         .text(d => d)
-        .attr("font-size", "8px")
+        .attr("font-size", "12px")
         .attr("padding-block", "0px");
 }
 

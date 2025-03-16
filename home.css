@@ -21,12 +21,11 @@ body {
 
 
 #scrollytelling {
-  grid-column: 1 / -1;
+  grid-template-columns: 1fr 11fr;
   display: grid;
   grid-template-columns: subgrid;
 }
 
-/* feel free to play with this to make your scrolly more seemless with your plot */
 #scroll-container {
   grid-column: 1;
   position: relative;
