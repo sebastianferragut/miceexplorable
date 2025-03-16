@@ -401,7 +401,6 @@ function updateChart(currentTime) {
     }
   } else {
     // In phase 2, tooltips will be handled via the brush overlay's events.
-    // (No update here.)
   }
 }
 
@@ -572,7 +571,26 @@ d3.select("#skip-end-button").on("click", () => {
   // Removed the toggling buttons for tooltips and brushing.
 });
 
+// -----------------------
+// UPDATED Reset-Scope (Zoom Out) Handler
 d3.select("#reset-scope-button").on("click", () => {
+  // Since brushing is only enabled in phase 2, we simply reset the xScale domain
+  // to the full experiment range and update the chart accordingly.
+  if (phase === 2) {
+    xScale.domain([experimentStart, experimentEnd]);
+    gXAxis.transition().duration(750)
+      .call(xAxis.tickValues(getFinalTickValues(xScale.domain()[0], xScale.domain()[1]))
+        .tickFormat(xTickFormat));
+    drawBackground();
+    updateChart(experimentEnd);
+    brushDomainActive = false;
+    d3.select("#reset-scope-button").style("display", "none");
+  }
+});
+
+// -----------------------
+// RESTART ANIMATION BUTTON
+d3.select("#resetBrushDetail").on("click", () => {
   pauseAnimation();
   isPaused = false;
   d3.select("#pause-button").text("Pause").style("display", "inline-block");
@@ -733,6 +751,7 @@ function attachTooltipEvents() {
          d3.select("#tooltip-male").style("display", "none");
          d3.select("#tooltip-female").style("display", "none");
       });
+  }
 }
 
 // -----------------------
@@ -741,4 +760,5 @@ function getNearestValue(dataSeries, time) {
   const bisect = d3.bisector(d => d.time).left;
   let index = bisect(dataSeries, time);
   if (index >= dataSeries.length) index = dataSeries.length - 1;
-  return dataSeries[index];}};
+  return dataSeries[index];
+}
