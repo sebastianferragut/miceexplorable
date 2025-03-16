@@ -459,7 +459,6 @@ function updateChart() {
       .transition().duration(d => d.id.includes("avg") ? 250 : 600)
           .attr("d", d => lineGenerator(d.data));
   
-  
   hitPaths.exit().remove();
   
   // Create visible paths
@@ -498,7 +497,7 @@ function updateChart() {
       .raise();
 }
 
-// --- UPDATED TOOLTIP FUNCTION ---
+// --- UPDATED TOOLTIP FUNCTIONS ---
 function showTooltip(event, mouse) {
   const hoveredId = mouse.id;
   d3.selectAll(".mouse-line")
@@ -509,24 +508,27 @@ function showTooltip(event, mouse) {
       .filter(d => d.id !== hoveredId)
       .attr("opacity", 0.5);
       
-  const message = hoveredId.includes("avg") ? "click to view all mice" : "click to learn more about this mouse";
+  const message = hoveredId.includes("avg") ? "click to view all mice" : "click to view mouse";
   let tooltipHTML = `<strong>${mouse.id}</strong><br>Gender: ${mouse.gender}<br>`;
   if (mouse.gender !== "male" && mouse.type) {
       tooltipHTML += `Type: ${mouse.type.replace("-", " ")}<br>`;
   }
   tooltipHTML += `<em>${message}</em>`;
   
+  // Position tooltip relative to the #advanced-chart container
+  const containerRect = document.getElementById("advanced-chart").getBoundingClientRect();
   tooltip
-    .style("left", `${event.clientX + 10}px`)
-    .style("top", `${event.clientY - 150}px`)
+    .style("left", `${event.clientX - containerRect.left + 110}px`)
+    .style("top", `${event.clientY - containerRect.top + 15}px`)
     .html(tooltipHTML)
     .classed("visible", true);
 }
 
 function moveTooltip(event) {
+  const containerRect = document.getElementById("advanced-chart").getBoundingClientRect();
   tooltip
-    .style("left", `${event.clientX + 10}px`)
-    .style("top", `${event.clientY - 150}px`);
+    .style("left", `${event.clientX - containerRect.left + 110}px`)
+    .style("top", `${event.clientY - containerRect.top + 15}px`);
 }
 
 function hideTooltip() {
@@ -648,7 +650,6 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("back-button").addEventListener("click", () => {
   window.location.href = "home.html";
 });
-
 
 window.addEventListener("resize", () => {
   updateDimensions();

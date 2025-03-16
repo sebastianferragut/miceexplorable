@@ -56,8 +56,6 @@ body {
   transition: background-color 0.3s ease-in-out;
 }
 
-
-
 .t-button {
   background-color: #a6a6a6;
 }
@@ -193,6 +191,7 @@ button:hover {
   border-radius: 4px;
   font-size: 12px;
   pointer-events: none;
+  
 }
 
 .scrub-overlay {
