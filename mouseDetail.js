@@ -20,10 +20,10 @@ const svg = d3.select("#detail-chart")
 // Define a clipPath so data to the left of the y–axis is hidden.
 const defs = svg.append("defs");
 defs.append("clipPath")
-    .attr("id", "clip")
-  .append("rect")
-    .attr("width", width)
-    .attr("height", height);
+  .attr("id", "clip")
+.append("rect")
+  .attr("width", width)
+  .attr("height", height);
 
 // -----------------------
 // Create groups inside a clipping group.
@@ -38,17 +38,17 @@ const gMaxLines = svg.append("g").attr("class", "max-lines");
 // -----------------------
 // Create groups for axes (not clipped).
 const gXAxis = svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", `translate(0, ${height})`);
+  .attr("class", "x axis")
+  .attr("transform", `translate(0, ${height})`);
 const gYAxis = svg.append("g")
-    .attr("class", "y axis");
+  .attr("class", "y axis");
 
 let xScale = d3.scaleTime().range([0, width]);
 let yScale = d3.scaleLinear().range([height, 0]);
 
 const fullTimeScale = d3.scaleTime()
-    .domain([new Date(2023, 0, 1, 0, 0), d3.timeMinute.offset(new Date(2023, 0, 1, 0, 0), 14 * 1440)])
-    .range([0, width]);
+  .domain([new Date(2023, 0, 1, 0, 0), d3.timeMinute.offset(new Date(2023, 0, 1, 0, 0), 14 * 1440)])
+  .range([0, width]);
 
 const experimentStart = new Date(2023, 0, 1, 0, 0);
 const experimentDays = 14;
@@ -89,8 +89,8 @@ function xTickFormat(d) {
 }
 
 let xAxis = d3.axisBottom(xScale)
-    .tickValues(getAnimationTickValues(experimentStart, experimentEnd))
-    .tickFormat(xTickFormat);
+  .tickValues(getAnimationTickValues(experimentStart, experimentEnd))
+  .tickFormat(xTickFormat);
 let yAxis = d3.axisLeft(yScale);
 
 gXAxis.call(xAxis);
@@ -170,13 +170,13 @@ if (!mouseID) {
     d3.select("#chart-title").text(`Body Temperatures of Male ${mouseNumber} and Female ${mouseNumber}`);
     d3.select("#subheader").text(`Follow male ${mouseNumber} and female ${mouseNumber} throughout the course of the experiment and watch their body temperature change.`);
   }
-  
+
   const maleFile = mode === "activity" ? "data/male_act.csv" : "data/male_temp.csv";
   const femFile = mode === "activity" ? "data/fem_act.csv" : "data/fem_temp.csv";
-  
+
   const maleKey = "m" + mouseNumber;
   const femaleKey = "f" + mouseNumber;
-  
+
   Promise.all([
     d3.csv(maleFile, rowConverter),
     d3.csv(femFile, rowConverter)
@@ -193,7 +193,7 @@ if (!mouseID) {
     const windowSize = mode === "activity" ? 25 : 15;
     smoothedMaleGlobal = smoothSeries(maleSeries, windowSize);
     const smoothedFemale = smoothSeries(femaleSeries, windowSize);
-    
+
     // Split female series into segments by estrus state.
     femaleSegmentsGlobal = [];
     let currentSegment = [];
@@ -213,24 +213,26 @@ if (!mouseID) {
     if (currentSegment.length > 0) {
       femaleSegmentsGlobal.push({ estrus: currentEstrus, data: currentSegment });
     }
-    
+
     const allValues = smoothedMaleGlobal.map(d => d.value)
       .concat(smoothedFemale.map(d => d.value));
     yScale.domain([d3.min(allValues) * 0.98, d3.max(allValues) * 1.02]);
     gYAxis.call(yAxis);
-    
+
     drawLegend();
     svg.select(".brush-group").remove();
     brushDomainActive = false;
-    
+
     startAnimation();
-    addScrubOverlay();
+    addScrubOverlay(); // used during animation (phase 1)
   });
 }
 
 function rowConverter(d) {
   const converted = {};
-  Object.keys(d).forEach(key => { converted[key] = +d[key]; });
+  Object.keys(d).forEach(key => {
+    converted[key] = +d[key];
+  });
   return converted;
 }
 
@@ -337,7 +339,7 @@ function updateChart(currentTime) {
   
   const maleDataForMax = smoothedMaleGlobal.filter(d => d.time <= (phase === 1 ? currentSimTime : experimentEnd));
   const femaleDataForMax = femaleSegmentsGlobal.flatMap(segment => segment.data)
-                              .filter(d => d.time <= (phase === 1 ? currentSimTime : experimentEnd));
+                            .filter(d => d.time <= (phase === 1 ? currentSimTime : experimentEnd));
   const maleMax = d3.max(maleDataForMax, d => d.value);
   const femaleMax = d3.max(femaleDataForMax, d => d.value);
   
@@ -364,8 +366,8 @@ function updateChart(currentTime) {
       .attr("stroke", "#d93d5f")
       .attr("stroke-width", 2)
       .attr("stroke-dasharray", "4,2");
-      
-  // Tooltip handling during animation.
+  
+  // During phase 1, update tooltips based on the current simulation time.
   if (phase === 1) {
     const maleData = smoothedMaleGlobal.filter(d => d.time <= currentSimTime);
     const lastMale = maleData.length ? maleData[maleData.length - 1] : null;
@@ -398,8 +400,8 @@ function updateChart(currentTime) {
         .style("top", (femaleY - 20) + "px");
     }
   } else {
-    d3.select("#tooltip-male").style("display", "none");
-    d3.select("#tooltip-female").style("display", "none");
+    // In phase 2, tooltips will be handled via the brush overlay's events.
+    // (No update here.)
   }
 }
 
@@ -412,7 +414,7 @@ function updateSummary(currentTime) {
   if (currentTime < experimentEnd) {
     const maleData = smoothedMaleGlobal.filter(d => d.time <= currentTime);
     const femaleData = femaleSegmentsGlobal.flatMap(segment => segment.data)
-                             .filter(d => d.time <= currentTime);
+                              .filter(d => d.time <= currentTime);
     maxMale = d3.max(maleData, d => d.value);
     minMale = d3.min(maleData, d => d.value);
     maxFemale = d3.max(femaleData, d => d.value);
@@ -431,7 +433,7 @@ function updateSummary(currentTime) {
   const minMaleDisplay = (minMale === null || minMale === undefined) ? (mode === "activity" ? "0" : "N/A") : minMale.toFixed(2) + unitLabel;
   const minFemaleDisplay = (minFemale === null || minFemale === undefined) ? (mode === "activity" ? "0" : "N/A") : minFemale.toFixed(2) + unitLabel;
   
-  const tableHTML = 
+  const tableHTML =
     `<table class="summary-table">
       <tr>
         <th colspan="3">Summary for ${dataLabel} Data (Mouse ID: ${mouseNumber})</th>
@@ -491,11 +493,11 @@ function transitionToFinal() {
         // Start with a minimal line.
         .attr("d", lineGenerator(segment.data.slice(0, 1)));
       path.transition().duration(1000)
-          .attrTween("d", function(d) {
-            let previous = d3.select(this).attr("d");
-            let current = lineGenerator(d);
-            return d3.interpolateString(previous, current);
-          });
+        .attrTween("d", function(d) {
+          let previous = d3.select(this).attr("d");
+          let current = lineGenerator(d);
+          return d3.interpolateString(previous, current);
+        });
     });
     
     // Hide buttons that are no longer needed.
@@ -504,10 +506,12 @@ function transitionToFinal() {
     d3.select("#reset-scope-button").style("display", "none");
     
     updateSummary(experimentEnd);
+    // Remove the scrubbing overlay (used during animation) so that it does not block events.
+    gClip.selectAll(".scrub-overlay").remove();
     enableBrush();
+    attachTooltipEvents();
     
   }, 500);
-
 }
 
 function runAnimation(startTime) {
@@ -565,118 +569,10 @@ function skipToEnd() {
 
 d3.select("#skip-end-button").on("click", () => {
   skipToEnd();
-  d3.select("#controls").append("button")
-    .attr("id", "tooltip-button")
-    .text("Show Tooltips")
-    .on("click", () => {
-      addLineHoverTooltips();
-    });
-
-  d3.select("#controls").append("button")
-    .attr("id", "brush-button")
-    .text("Enable Brushing")
-    .on("click", () => {
-      enableBrush();
-    });
+  // Removed the toggling buttons for tooltips and brushing.
 });
 
 d3.select("#reset-scope-button").on("click", () => {
-  brushDomainActive = false;
-  transitionToFinal();
-  d3.select("#reset-scope-button").style("display", "none");
-  enableBrush();
-});
-
-function addScrubOverlay() {
-  gClip.append("rect")
-    .attr("class", "scrub-overlay")
-    .attr("width", width)
-    .attr("height", height)
-    .style("fill", "transparent")
-    .style("pointer-events", "all")
-    .on("mousedown", scrubStart)
-    .on("mousemove", scrubMove)
-    .on("mouseup", scrubEnd)
-    .on("mouseleave", scrubEnd);
-}
-
-function scrubStart(event) {
-  isScrubbing = true;
-  if (!isPaused) {
-    pauseAnimation();
-    isPaused = true;
-    d3.select("#pause-button").text("Resume");
-  }
-}
-
-function scrubMove(event) {
-  if (isScrubbing) {
-    const [x] = d3.pointer(event);
-    currentSimTime = fullTimeScale.invert(x);
-    updateChart(currentSimTime);
-    updateSummary(currentSimTime);
-  }
-}
-
-function scrubEnd(event) {
-  isScrubbing = false;
-}
-
-let brush = d3.brushX()
-  .extent([[0, 0], [width, height]])
-  .on("end", brushed);
-function enableBrush() {
-  svg.select(".tooltip-layer").remove();
-  if (phase === 2) {
-    if (svg.select(".brush-group").empty()) {
-      svg.append("g")
-         .attr("class", "brush-group")
-         .call(brush);
-    } else {
-      svg.select(".brush-group").call(brush);
-    }
-  }
-}
-
-function brushed(event) {
-  if (!event.selection) return;
-  brushDomainActive = true;
-  const [x0, x1] = event.selection;
-  xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
-  gXAxis.transition().duration(750).call(xAxis);
-  drawBackground();
-  updateChart(currentSimTime);
-  svg.select(".brush-group").call(brush.move, null);
-  d3.select("#reset-scope-button").style("display", "block");
-}
-
-function updateDimensions() {
-  container = d3.select("#detail-chart").node();
-  width = container.clientWidth - margin.left - margin.right;
-  height = container.clientHeight - margin.top - margin.bottom;
-  d3.select("#detail-chart svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`);
-  xScale.range([0, width]);
-  fullTimeScale.range([0, width]);
-  svg.select("#clip rect")
-    .attr("width", width)
-    .attr("height", height);
-  gXAxis.attr("transform", `translate(0, ${height})`);
-  svg.select(".x.axis-label")
-    .attr("x", width / 2)
-    .attr("y", height + margin.bottom - 10);
-  svg.select(".y.axis-label")
-    .attr("x", -height / 2)
-    .attr("y", -margin.left + 20);
-  updateChart(currentSimTime);
-}
-window.addEventListener("resize", updateDimensions);
-
-d3.select("#resetBrushDetail").on("click", () => {
-  d3.select("#tooltip-button").remove();
-  d3.select("#brush-button").remove();
   pauseAnimation();
   isPaused = false;
   d3.select("#pause-button").text("Pause").style("display", "inline-block");
@@ -688,6 +584,7 @@ d3.select("#resetBrushDetail").on("click", () => {
   d3.select("#reset-scope-button").style("display", "none");
   startAnimation();
 });
+
 d3.select("#back-button").on("click", () => {
   window.location.href = "advanced.html";
 });
@@ -716,53 +613,132 @@ function updateYAxisLabel() {
 }
 updateYAxisLabel();
 
-// --- Hover tooltips after animation ---
+// --- Scrubbing overlay for animation phase ---
+function addScrubOverlay() {
+  gClip.append("rect")
+    .attr("class", "scrub-overlay")
+    .attr("width", width)
+    .attr("height", height)
+    .style("fill", "transparent")
+    .style("pointer-events", "all")
+    .on("mousedown", scrubStart)
+    .on("mousemove", scrubMove)
+    .on("mouseup", scrubEnd)
+    .on("mouseleave", scrubEnd);
+}
+
+function scrubStart(event) {
+  isScrubbing = true;
+  if (!isPaused) {
+    pauseAnimation();
+    isPaused = true;
+    d3.select("#pause-button").text("Resume");
+  }
+}
+function scrubMove(event) {
+  if (isScrubbing) {
+    const [x] = d3.pointer(event);
+    currentSimTime = fullTimeScale.invert(x);
+    updateChart(currentSimTime);
+    updateSummary(currentSimTime);
+  }
+}
+function scrubEnd(event) {
+  isScrubbing = false;
+}
+
+// -----------------------
+// Brush for panning.
+let brush = d3.brushX()
+  .extent([[0, 0], [width, height]])
+  .on("end", brushed);
+function enableBrush() {
+  // Removed removal of any tooltip layer so both features work concurrently.
+  if (phase === 2) {
+    if (svg.select(".brush-group").empty()) {
+      svg.append("g")
+         .attr("class", "brush-group")
+         .call(brush);
+    } else {
+      svg.select(".brush-group").call(brush);
+    }
+  }
+}
+function brushed(event) {
+  if (!event.selection) return;
+  brushDomainActive = true;
+  const [x0, x1] = event.selection;
+  xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+  gXAxis.transition().duration(750).call(xAxis);
+  drawBackground();
+  updateChart(currentSimTime);
+  svg.select(".brush-group").call(brush.move, null);
+  d3.select("#reset-scope-button").style("display", "block");
+}
+function updateDimensions() {
+  container = d3.select("#detail-chart").node();
+  width = container.clientWidth - margin.left - margin.right;
+  height = container.clientHeight - margin.top - margin.bottom;
+  d3.select("#detail-chart svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`);
+  xScale.range([0, width]);
+  fullTimeScale.range([0, width]);
+  svg.select("#clip rect")
+    .attr("width", width)
+    .attr("height", height);
+  gXAxis.attr("transform", `translate(0, ${height})`);
+  svg.select(".x.axis-label")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 10);
+  svg.select(".y.axis-label")
+    .attr("x", -height / 2)
+    .attr("y", -margin.left + 20);
+  updateChart(currentSimTime);
+}
+window.addEventListener("resize", updateDimensions);
+
+// -----------------------
+// Attach tooltip events to the brush overlay so that tooltips and brushing work together.
+function attachTooltipEvents() {
+  const brushOverlay = svg.select(".brush-group").select(".overlay");
+  if (!brushOverlay.empty()) {
+    // Use a separate event namespace so as not to override the brush’s own events.
+    brushOverlay
+      .on("mousemove.tooltip", function(event) {
+         const [x] = d3.pointer(event);
+         const time = xScale.invert(x);
+         const nearestMale = getNearestValue(smoothedMaleGlobal, time);
+         const nearestFemale = getNearestValue(femaleSegmentsGlobal.flatMap(segment => segment.data), time);
+         if (nearestMale && nearestFemale) {
+           const chartRect = container.getBoundingClientRect();
+           const maleX = xScale(nearestMale.time) + chartRect.left + window.scrollX;
+           const maleY = yScale(nearestMale.value) + chartRect.top + window.scrollY;
+           const femaleX = xScale(nearestFemale.time) + chartRect.left + window.scrollX;
+           const femaleY = yScale(nearestFemale.value) + chartRect.top + window.scrollY;
+           d3.select("#tooltip-male")
+             .html(`Male: ${nearestMale.value.toFixed(2)}`)
+             .style("left", (maleX + 10) + "px")
+             .style("top", (maleY - 20) + "px")
+             .style("display", "block");
+           d3.select("#tooltip-female")
+             .html(`Female: ${nearestFemale.value.toFixed(2)}`)
+             .style("left", (femaleX + 10) + "px")
+             .style("top", (femaleY - 20) + "px")
+             .style("display", "block");
+         }
+      })
+      .on("mouseout.tooltip", function(event) {
+         d3.select("#tooltip-male").style("display", "none");
+         d3.select("#tooltip-female").style("display", "none");
+      });
+}
+
+// -----------------------
+// Helper function for tooltip: returns the nearest value given a time.
 function getNearestValue(dataSeries, time) {
   const bisect = d3.bisector(d => d.time).left;
   let index = bisect(dataSeries, time);
   if (index >= dataSeries.length) index = dataSeries.length - 1;
-  return dataSeries[index];
-}
-
-function addLineHoverTooltips() {
-  const tooltipLayer = svg.append("g").attr("class", "tooltip-layer");
-  const overlay = tooltipLayer.append("rect")
-    .attr("class", "overlay")
-    .attr("width", width)
-    .attr("height", height)
-    .style("fill", "none")
-    .style("pointer-events", "all");
-
-  overlay.on("mousemove", function(event) {
-    const [x] = d3.pointer(event);
-    const time = xScale.invert(x);
-    const nearestMale = getNearestValue(smoothedMaleGlobal, time);
-    const nearestFemale = getNearestValue(femaleSegmentsGlobal.flatMap(segment => segment.data), time);
-
-    if (nearestMale && nearestFemale) {
-      const chartRect = container.getBoundingClientRect();
-      const maleX = xScale(nearestMale.time) + chartRect.left + window.scrollX;
-      const maleY = yScale(nearestMale.value) + chartRect.top + window.scrollY;
-      const femaleX = xScale(nearestFemale.time) + chartRect.left + window.scrollX;
-      const femaleY = yScale(nearestFemale.value) + chartRect.top + window.scrollY;
-
-      d3.select("#tooltip-male")
-        .html(`Male: ${nearestMale.value.toFixed(2)}`)
-        .style("left", (maleX + 10) + "px")
-        .style("top", (maleY - 20) + "px")
-        .style("display", "block");
-
-      d3.select("#tooltip-female")
-        .html(`Female: ${nearestFemale.value.toFixed(2)}`)
-        .style("left", (femaleX + 10) + "px")
-        .style("top", (femaleY - 20) + "px")
-        .style("display", "block");
-    } else {
-      d3.select("#tooltip-male").style("display", "none");
-      d3.select("#tooltip-female").style("display", "none");
-    }
-  }).on("mouseout", function() {
-    d3.select("#tooltip-male").style("display", "none");
-    d3.select("#tooltip-female").style("display", "none");
-  });
-}
+  return dataSeries[index];}};
