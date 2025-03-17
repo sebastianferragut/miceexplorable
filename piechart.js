@@ -44,14 +44,11 @@ function categorizeData(data, minData, maxData, binsize) {
     return bins; 
 }
 
-function drawPieCharts(femaleBins, maleBins, dataType, divId) {
+function drawPieCharts(femaleBins, maleBins, dataType, divId, width, height, radius) {
     d3.select(divId).select("svg").remove();
     const svg = d3.select(divId).append("svg")
-        .attr("width", 1000) 
-        .attr("height", 500);
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
-    const radius = 160;
+        .attr("width", width) 
+        .attr("height", height);
     const uniqueBins = Object.keys(femaleBins);
     const colorScale = dataType === "Activity" 
         ? d3.scaleLinear().domain([0, uniqueBins.length]).range(["lightgreen", "green"])
@@ -133,16 +130,16 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         });
     svg.append("text")
         .attr("x", width / 4)
-        .attr("y", 50)
+        .attr("y", 20)
         .attr("text-anchor", "middle")
-        .style("font-size", "20px")
+        .style("font-size", "18px")
         .style("font-weight", "bold")
         .text(`Male Mice ${dataType} Distribution`);
     svg.append("text")
         .attr("x", (width * 3) / 4)
-        .attr("y", 50)
+        .attr("y", 20)
         .attr("text-anchor", "middle")
-        .style("font-size", "20px")
+        .style("font-size", "18px")
         .style("font-weight", "bold")
         .text(`Female Mice ${dataType} Distribution`);
     const legendGroup = svg.append("g")
@@ -211,8 +208,8 @@ function updatePieChart(temperatureData, activityData){
     const femaleActBins = categorizeData(femaleActData, femaleActStats.min, femaleActStats.max, 25);
     const maleActBins = categorizeData(maleActData, maleActStats.min, maleActStats.max, 25);
     
-    drawPieCharts(femaleTempBins, maleTempBins, 'Temperature', "#temp-pie-chart");
-    drawPieCharts(femaleActBins, maleActBins, "Activity", "#activity-pie-chart");
+    drawPieCharts(femaleTempBins, maleTempBins, 'Temperature', "#temp-pie-chart", 1000, 410, 160);
+    drawPieCharts(femaleActBins, maleActBins, "Activity", "#activity-pie-chart", 1000, 410, 160);
 }
 
 // Update scroll content for day groups
@@ -307,8 +304,8 @@ function updateOverallPieChart(temperatureData, activityData) {
     const femaleActBinsOverall = categorizeData(femaleActDataOverall, femaleActStatsOverall.min, femaleActStatsOverall.max, 25);
     const maleActBinsOverall = categorizeData(maleActDataOverall, maleActStatsOverall.min, maleActStatsOverall.max, 25);
     
-    drawPieCharts(femaleTempBinsOverall, maleTempBinsOverall, 'Temperature', "#overall-temp-pie-chart");
-    drawPieCharts(femaleActBinsOverall, maleActBinsOverall, "Activity", "#overall-activity-pie-chart");
+    drawPieCharts(femaleTempBinsOverall, maleTempBinsOverall, 'Temperature', "#overall-temp-pie-chart", 1000, 400, 170);
+    drawPieCharts(femaleActBinsOverall, maleActBinsOverall, "Activity", "#overall-activity-pie-chart",1000, 400, 170);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

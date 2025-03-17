@@ -8,10 +8,11 @@ body {
    Right: fixed 300px empty to balance the layout. */
 #scrollytelling {
   display: grid;
-  grid-template-columns: 300px auto 300px;
+  grid-template-columns: 500px auto 300px;
   column-gap: 20px;
   margin: 0 auto;  /* Center the grid on the page */
   align-items: start;
+  max-height: 300px;
 }
 
 /* Scroll container remains fixed at 300px wide */
@@ -23,6 +24,7 @@ body {
   margin-top: 80px;
   margin-bottom: 50px;
   border-radius: 15px;
+  margin-left: 150px;
 }
 
 /* Change items container to relative positioning so its content is confined within the scroll container */
@@ -52,7 +54,7 @@ body {
 #narrative_pies {
   text-align: center;
   width: 100%;
-  margin: 20px auto;
+  margin-inline: 20px;
 }
 
 /* Overall static pie chart container */
@@ -127,4 +129,8 @@ dd {
 
 dt {
   margin-bottom: 20px;
+}
+
+p {
+  margin-block: 0px;
 }
