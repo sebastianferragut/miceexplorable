@@ -65,6 +65,34 @@ let phase = 1;
 // Global flag to detect when the brush (interactive panning) is active.
 let brushDomainActive = false;
 
+/* 
+  NEW drawBackground implementation:
+  Instead of coloring based on 6 AM/6 PM transitions, we now alternate every 720 minutes (12 hours).
+  The first interval (t=0 to t=720) is "lights off" (gray).
+*/
+function drawBackground() {
+  gBackground.selectAll("rect").remove();
+  let current = experimentStart;
+  let index = 0;
+  while (current < experimentEnd) {
+    let next = d3.timeMinute.offset(current, 720);
+    if (next > experimentEnd) next = experimentEnd;
+    if (index % 2 === 0) {
+      gBackground.append("rect")
+        .attr("class", "background")
+        .attr("x", xScale(current))
+        .attr("y", 0)
+        .attr("width", xScale(next) - xScale(current))
+        .attr("height", height)
+        .attr("fill", "#e6e6e6");
+    }
+    current = next;
+    index++;
+  }
+}
+
+drawBackground();
+
 function getAnimationTickValues(start, end) {
   let ticks = d3.timeHour.every(3).range(start, end);
   let dayTicks = d3.timeDay.every(1).range(start, end);
@@ -118,31 +146,6 @@ const lineGenerator = d3.line()
   .x(d => xScale(d.time))
   .y(d => yScale(d.value))
   .curve(d3.curveMonotoneX);
-
-function drawBackground() {
-  gBackground.selectAll("rect").remove();
-  for (let day = 0; day < experimentDays; day++) {
-    const dayStart = d3.timeDay.offset(experimentStart, day);
-    const sixAM = d3.timeHour.offset(dayStart, 6);
-    const sixPM = d3.timeHour.offset(dayStart, 18);
-    const nextDay = d3.timeDay.offset(dayStart, 1);
-    gBackground.append("rect")
-      .attr("class", "background")
-      .attr("x", xScale(dayStart))
-      .attr("y", 0)
-      .attr("width", xScale(sixAM) - xScale(dayStart))
-      .attr("height", height)
-      .attr("fill", "#e6e6e6");
-    gBackground.append("rect")
-      .attr("class", "background")
-      .attr("x", xScale(sixPM))
-      .attr("y", 0)
-      .attr("width", xScale(nextDay) - xScale(sixPM))
-      .attr("height", height)
-      .attr("fill", "#e6e6e6");
-  }
-}
-drawBackground();
 
 function smoothSeries(data, windowSize) {
   return data.map((d, i, arr) => {
