@@ -178,7 +178,8 @@ button:hover {
 
 /* New style for vertical line */
 .vertical-line {
-    stroke: black;
+    stroke: lightslategray;
     stroke-width: 2;
+    stroke-dasharray: 4,4;
     pointer-events: none;
 }
