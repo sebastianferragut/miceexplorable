@@ -2,7 +2,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  max-height: 100vh;
   overflow-y: auto;
 }
 
@@ -11,7 +11,8 @@ html, body {
   transform: scale(0.8);           /* Reduced scale for smaller overall content */
   transform-origin: top left;
   width: 125%;                     /* Adjusted so that the container still covers the page */
-  height: 125%;
+  height: 100%;
+  max-height: 90vh;
 }
 
 body {
@@ -30,6 +31,7 @@ h2 {
   text-align: center;
   color: #434343;
 }
+
 p {
   margin: 10px 0;
   padding: 0 150px;
@@ -245,6 +247,10 @@ button:hover {
 #advanced-chart {
   position: relative; /* Allow absolute positioning inside the chart */
   min-height: 500px;
+}
+
+#advanced-legend{ 
+  padding-left: 60px;  
 }
 
 /* Position the Zoom Out button on the bottom right of the chart, slightly below so the axis is visible */
