@@ -16,11 +16,32 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
-  font-size: 18px;
   background-color: #f4f4f4;
   text-align: center;
   position: relative;
   padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+h2 {
+  text-align: center;
+  color: #434343;
+}
+p {
+  margin: 10px 0;
+  padding: 0 150px;
+  color: #333;
+  font-size: 22.5px;
+}
+
+#summary-annotation{
+  margin: 10px 0;
+  padding: 0 150px;
+  color: #333;
+  font-size: 22.5px !important;
 }
 
 .next-button {

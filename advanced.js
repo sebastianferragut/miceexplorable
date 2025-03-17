@@ -280,7 +280,7 @@ function initializeChart() {
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("fill", "#333")
-    .style("font-size", "16px");
+    .style("font-size", "18px");
     
   svg.append("text")
     .attr("class", "lightOffLabel")
@@ -288,14 +288,14 @@ function initializeChart() {
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("fill", "#333")
-    .style("font-size", "16px");
+    .style("font-size", "18px");
   
   svg.append("text")
     .attr("class", "x-axis-label")
     .attr("x", width/2)
     .attr("y", height + margin.bottom - 10)
     .attr("text-anchor", "middle")
-    .style("font-size", "14px")
+    .style("font-size", "18px")
     .style("fill", "#333")
     .text("Time of Day");
   
