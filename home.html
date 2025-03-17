@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,28 +13,41 @@
 </head>
 
 <body>
-   <!-- Navigation button to go to the advanced chart page -->
+  <!-- Navigation buttons -->
   <button id="to-advanced" class="to-advanced">Go to Advanced Chart</button>
   <button id="to-index" class="to-index">Back</button>
   <h1>Temperature and Activity Distributions</h1>
 
+  <!-- Overall Average Pie Chart Container (static averages across the whole experiment) -->
+  <div id="overall-container">
+    <h2>Overall Distribution Averages</h2>
+    <div id="overall-piechart">
+      <div id="overall-temp-pie-chart"></div>
+      <div id="overall-activity-pie-chart"></div>
+    </div>
+  </div>
+
   <p>
-    The pie charts below show the average hourly distributions of temperature and activity for male and female mice across the 14 days.<br></br><b>Use the scroll box on the left to see how these distributions change throughout the day. </b><i>What do you notice?</i>
+    The pie charts below show the average hourly distributions of temperature and activity for male and female mice across the 14 days.<br>
+    <b>Use the scroll box on the left to see how these distributions change throughout the day. </b>
+    <i>What do you notice?</i>
   </p>
 
-  <!-- Scrolly Box Container -->
+  <!-- Scrolly Box and Dynamic Pie Chart Container -->
   <div id="scrollytelling">
     <div id="scroll-container">
       <div id="spacer"></div>
       <div id="items-container"></div>
     </div>
-    <!-- Temp Pie Chart Container -->
+    <!-- Dynamic Pie Chart Container (updates when scrolling) -->
     <div id="piechart">
       <div id="temp-pie-chart"></div>
       <!-- Narrative text for piecharts -->
       <div id="narrative_pies">
         <p>
-          We can see that overall, the temperature of female mice tends to be higher in comparison to male mice. There is also a slight discrepancy between the female and male activity distributions at higher ranges.<br></br><i>But why is this so? </i><b>Click on a pie slice to learn more.</b>
+          We can see that overall, the temperature of female mice tends to be higher in comparison to male mice.
+          There is also a slight discrepancy between the female and male activity distributions at higher ranges.<br>
+          <i>But why is this so?</i> <b>Click on a pie slice to learn more.</b>
         </p>
         <script>
           document.getElementById('to-advanced').addEventListener('click', () => {
@@ -45,44 +57,34 @@
             window.location.href = 'index.html';
           });
         </script>
-      <!-- Activity Pie Chart Container -->
+      </div>
       <div id="activity-pie-chart"></div>
     </div>
   </div>
 
-
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const transitionElement = document.createElement("div");
-    transitionElement.classList.add("page-transition");
-
-    // Add image inside the transition div
-    const image = document.createElement("img");
-    image.src = "imgs/mice.svg"; // Replace with your image path
-    image.alt = "Loading...";
-    
-    transitionElement.appendChild(image);
-    document.body.appendChild(transitionElement);
-
-    setTimeout(() => {
-      transitionElement.classList.add("hidden");
-    }, 200); // Fade out faster
-
-    document.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        const href = link.getAttribute("href");
-
-        transitionElement.classList.remove("hidden");
-
-        setTimeout(() => {
-          window.location.href = href;
-        }, 200);
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const transitionElement = document.createElement("div");
+      transitionElement.classList.add("page-transition");
+      const image = document.createElement("img");
+      image.src = "imgs/mice.svg";
+      image.alt = "Loading...";
+      transitionElement.appendChild(image);
+      document.body.appendChild(transitionElement);
+      setTimeout(() => {
+        transitionElement.classList.add("hidden");
+      }, 200);
+      document.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const href = link.getAttribute("href");
+          transitionElement.classList.remove("hidden");
+          setTimeout(() => {
+            window.location.href = href;
+          }, 200);
+        });
       });
     });
-  });
-</script>
+  </script>
 </body>
-
 </html>

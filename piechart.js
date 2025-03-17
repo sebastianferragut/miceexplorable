@@ -1,22 +1,19 @@
-// Data storage for temperatures
+// Data storage for temperatures (for dynamic scrolly charts)
 let femaleTempData = [];
 let maleTempData = [];
 let femaleActData = [];
 let maleActData = [];
-let tempArr = Array.from({ length: 24 }, () => []);
-let actArr = Array.from({ length: 24 }, () => []);
-
+// Grouping arrays for days (14 days)
+let tempArr = Array.from({ length: 14 }, () => []);
+let actArr = Array.from({ length: 14 }, () => []);
 
 // Load CSV data
 async function loadData(filenames, labels) {
     let data = [];
-
     for (let fileIndex = 0; fileIndex < filenames.length; fileIndex++) {
         const filename = filenames[fileIndex];
         const subjectPrefix = labels[fileIndex];
-
         const fileData = await d3.csv(`./data/${filename}`);
-
         fileData.forEach((row, i) => {
             if (!data[i]) {
                 data[i] = { minute: i + 1 };
@@ -35,7 +32,6 @@ function categorizeData(data, minData, maxData, binsize) {
     for (let value = minData; value < maxData; value += binsize) {
         bins[`${value}-${value + binsize}`] = 0;
     }
-
     data.flat().forEach(temp => {
         for (let bin in bins) {
             let [low, high] = bin.split("-").map(Number);
@@ -53,33 +49,22 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
     const svg = d3.select(divId).append("svg")
         .attr("width", 1000) 
         .attr("height", 500);
-
     const width = +svg.attr("width");
     const height = +svg.attr("height");
-    const radius = 160; // Size of each pie chart
-
-    // Use distinct color scales:
+    const radius = 160;
     const uniqueBins = Object.keys(femaleBins);
-    const colorScale = dataType === "Activity" ? d3.scaleLinear()
-    .domain([0, uniqueBins.length])
-    .range(["lightgreen", "green"]):d3.scaleLinear()
-        .domain([0, uniqueBins.length])
-        .range(["yellow", "red"]);
-    
-
+    const colorScale = dataType === "Activity" 
+        ? d3.scaleLinear().domain([0, uniqueBins.length]).range(["lightgreen", "green"])
+        : d3.scaleLinear().domain([0, uniqueBins.length]).range(["yellow", "red"]);
     const pie = d3.pie().sort(null).value(d => d.value);
     const arc = d3.arc().innerRadius(0).outerRadius(radius);
     const arcHover = d3.arc().innerRadius(0).outerRadius(radius + 10);
-
-    // Prepare data arrays for male and female
     let femaleData = uniqueBins.map((bin, i) => ({
         key: bin, value: femaleBins[bin], color: colorScale(i)
     }));
     let maleData = uniqueBins.map((bin, i) => ({
         key: bin, value: maleBins[bin], color: colorScale(i)
     }));
-
-    // Create tooltip
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("position", "absolute")
@@ -89,8 +74,6 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .style("border-radius", "5px")
         .style("visibility", "hidden")
         .style("font-size", "14px");
-
-    // Function to show tooltip
     function showTooltip(event, d, gender) {
         tooltip.style("visibility", "visible")
             .html(`<strong>${gender} Mice</strong><br>
@@ -99,16 +82,12 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
             .style("top", `${event.pageY - 20}px`)
             .style("left", `${event.pageX + 10}px`);
     }
-
-    // Function to hide tooltip
     function hideTooltip() {
         tooltip.style("visibility", "hidden");
     }
-
     // Draw Male Pie Chart (Left Side)
     const maleGroup = svg.append("g")
         .attr("transform", `translate(${width / 4}, ${height / 2})`);
-
     maleGroup.selectAll(".maleSlice")
         .data(pie(maleData))
         .enter()
@@ -127,14 +106,11 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
             hideTooltip();
         })
         .on("click", function(event, d) {
-            // Redirect to advanced chart with temperature or activity mode and male filter.
             window.location.href = `advanced.html?mode=${dataType.toLowerCase()}&filter=male`;
         });
-
     // Draw Female Pie Chart (Right Side)
     const femaleGroup = svg.append("g")
         .attr("transform", `translate(${(width * 3) / 4}, ${height / 2})`);
-
     femaleGroup.selectAll(".femaleSlice")
         .data(pie(femaleData))
         .enter()
@@ -153,11 +129,8 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
             hideTooltip();
         })
         .on("click", function(event, d) {
-            // Redirect to advanced chart with temperature or activity mode and female filter.
             window.location.href = `advanced.html?mode=${dataType.toLowerCase()}&filter=female`;
         });
-
-    // Add Titles for Male & Female
     svg.append("text")
         .attr("x", width / 4)
         .attr("y", 50)
@@ -165,7 +138,6 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .style("font-size", "20px")
         .style("font-weight", "bold")
         .text(`Male Mice ${dataType} Distribution`);
-
     svg.append("text")
         .attr("x", (width * 3) / 4)
         .attr("y", 50)
@@ -173,10 +145,8 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .style("font-size", "20px")
         .style("font-weight", "bold")
         .text(`Female Mice ${dataType} Distribution`);
-   
     const legendGroup = svg.append("g")
         .attr("transform", `translate(${width/2-20}, 50)`);
-
     legendGroup.selectAll("rect")
         .data(uniqueBins)
         .enter()
@@ -186,7 +156,6 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .attr("width", 20)
         .attr("height", 20)
         .attr("fill", (d, i) => colorScale(i));
-
     legendGroup.selectAll("text")
         .data(uniqueBins)
         .enter()
@@ -202,29 +171,31 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
 function findMinMax(arr) {
     let min = Infinity;
     let max = -Infinity;
-
     for (const row of arr) {
         for (const num of row) {
             if (num < min) min = num;
             if (num > max) max = num;
         }
     }
-    min = Math.floor(min);
-    max = Math.ceil(max);
-    return { min, max };
+    return { min: Math.floor(min), max: Math.ceil(max) };
 }
 
+// Update dynamic pie charts based on a selected time slice (day)
 function updatePieChart(temperatureData, activityData){
-    for (let min = 0; min < temperatureData.length; min++) {
-        let minuteTemps = temperatureData[min];
+    femaleTempData = [];
+    maleTempData = [];
+    femaleActData = [];
+    maleActData = [];
+    
+    for (let i = 0; i < temperatureData.length; i++) {
+        let minuteTemps = temperatureData[i];
         if (minuteTemps) {
             femaleTempData.push(Object.values(minuteTemps).slice(1, 14));
             maleTempData.push(Object.values(minuteTemps).slice(14, 26));
         }
     }
-
-    for (let min = 0; min < activityData.length; min++) {
-        let minuteAct = activityData[min];
+    for (let i = 0; i < activityData.length; i++) {
+        let minuteAct = activityData[i];
         if (minuteAct) {
             femaleActData.push(Object.values(minuteAct).slice(1, 14));
             maleActData.push(Object.values(minuteAct).slice(14, 26));
@@ -234,8 +205,7 @@ function updatePieChart(temperatureData, activityData){
     const maleTempStats = findMinMax(maleTempData);
     const femaleActStats = findMinMax(femaleActData);
     const maleActStats = findMinMax(maleActData);
-
-    const numArc = 8;
+    
     const femaleTempBins = categorizeData(femaleTempData, femaleTempStats.min, femaleTempStats.max, 0.5);
     const maleTempBins = categorizeData(maleTempData, maleTempStats.min, maleTempStats.max, 0.5);
     const femaleActBins = categorizeData(femaleActData, femaleActStats.min, femaleActStats.max, 25);
@@ -245,41 +215,32 @@ function updatePieChart(temperatureData, activityData){
     drawPieCharts(femaleActBins, maleActBins, "Activity", "#activity-pie-chart");
 }
 
+// Update scroll content for day groups
 function updateScrollContent(temperatureData, activityData) {
     const itemsContainer = d3.select('#items-container');
-
-    // Clear old content before appending new
     itemsContainer.html("");
-
-
-    // Group data correctly by hour
     for (let i = 0; i < temperatureData.length; i++) {
-        let hour = Math.floor(i / 60) % 24;  
-        tempArr[hour].push(temperatureData[i]);  
-        actArr[hour].push(activityData[i]);
+        let day = Math.floor(i / 1440);
+        if(day < tempArr.length) {
+            tempArr[day].push(temperatureData[i]);
+            actArr[day].push(activityData[i]);
+        }
     }
-
-
-    let hourContainer = itemsContainer
-        .selectAll('.hour-group')
+    let dayContainer = itemsContainer
+        .selectAll('.day-group')
         .data(tempArr)
         .enter()
         .append('div')
-        .attr('class', 'hour-group')
+        .attr('class', 'day-group')
         .style("margin-block", "15px")
         .style("border-bottom", "3px dashed #Ddd");
-
-    // Append hour label
-    hourContainer.append('dt')
-        .html((_, i) => `<strong>Hour ${i}:00</strong>`)
+    dayContainer.append('dt')
+        .html((_, i) => `<strong>Day ${i + 1}</strong>`)
         .style("font-size", "16px");
-
-    // Append temperature readings (inside each hour group)
-    hourContainer.append('dd')
+    dayContainer.append('dd')
         .html((_, i) => {
             let tempAverages = calculateGenderAverages(tempArr[i]);
-            let actAverages = calculateGenderAverages(actArr[i]);  // Use matching activity data
-
+            let actAverages = calculateGenderAverages(actArr[i]);
             return `
             <div class="temp" style="color: orange;">
                 Temp Avg (F): ${tempAverages.femaleAvg}°C<br>
@@ -290,12 +251,11 @@ function updateScrollContent(temperatureData, activityData) {
                 Activity Avg (M): ${actAverages.maleAvg}
             </div>`;
         });
-
 }
+
 function calculateGenderAverages(dataArray) {
     let maleValues = [];
     let femaleValues = [];
-
     dataArray.forEach(entry => {
         Object.keys(entry).forEach(key => {
             if (key.startsWith("f") && typeof entry[key] === "number") {  
@@ -306,41 +266,77 @@ function calculateGenderAverages(dataArray) {
             }
         });
     });
-
     let maleAvg = maleValues.length > 0 
         ? (maleValues.reduce((a, b) => a + b, 0) / maleValues.length).toFixed(1) 
         : 'N/A';
     let femaleAvg = femaleValues.length > 0 
         ? (femaleValues.reduce((a, b) => a + b, 0) / femaleValues.length).toFixed(1) 
         : 'N/A';
-
     return { maleAvg, femaleAvg };
 }
 
+// NEW: Update overall average pie charts (static, across the whole experiment)
+function updateOverallPieChart(temperatureData, activityData) {
+    let femaleTempDataOverall = [];
+    let maleTempDataOverall = [];
+    let femaleActDataOverall = [];
+    let maleActDataOverall = [];
+    
+    for (let i = 0; i < temperatureData.length; i++) {
+        let minuteTemps = temperatureData[i];
+        if (minuteTemps) {
+            femaleTempDataOverall.push(Object.values(minuteTemps).slice(1, 14));
+            maleTempDataOverall.push(Object.values(minuteTemps).slice(14, 26));
+        }
+    }
+    for (let i = 0; i < activityData.length; i++) {
+        let minuteAct = activityData[i];
+        if (minuteAct) {
+            femaleActDataOverall.push(Object.values(minuteAct).slice(1, 14));
+            maleActDataOverall.push(Object.values(minuteAct).slice(14, 26));
+        }
+    }
+    
+    const femaleTempStatsOverall = findMinMax(femaleTempDataOverall);
+    const maleTempStatsOverall = findMinMax(maleTempDataOverall);
+    const femaleActStatsOverall = findMinMax(femaleActDataOverall);
+    const maleActStatsOverall = findMinMax(maleActDataOverall);
+    
+    const femaleTempBinsOverall = categorizeData(femaleTempDataOverall, femaleTempStatsOverall.min, femaleTempStatsOverall.max, 0.5);
+    const maleTempBinsOverall = categorizeData(maleTempDataOverall, maleTempStatsOverall.min, maleTempStatsOverall.max, 0.5);
+    const femaleActBinsOverall = categorizeData(femaleActDataOverall, femaleActStatsOverall.min, femaleActStatsOverall.max, 25);
+    const maleActBinsOverall = categorizeData(maleActDataOverall, maleActStatsOverall.min, maleActStatsOverall.max, 25);
+    
+    drawPieCharts(femaleTempBinsOverall, maleTempBinsOverall, 'Temperature', "#overall-temp-pie-chart");
+    drawPieCharts(femaleActBinsOverall, maleActBinsOverall, "Activity", "#overall-activity-pie-chart");
+}
 
-
-// Load data and generate the charts
 document.addEventListener("DOMContentLoaded", async () => {
     const tempFiles = [
         "fem_temp.csv",
         "male_temp.csv"
     ];
-
     const activityFiles = [
         "fem_act.csv",
         "male_act.csv"
     ];
     const labels = ["f", "m"];
-
     const temperatureData = await loadData(tempFiles, labels);
     const activityData = await loadData(activityFiles, labels);
-    updatePieChart(temperatureData, activityData)
-    updateScrollContent(temperatureData, activityData)
-    const scrollContainer = d3.select('#scroll-container');
-scrollContainer.on('scroll', () => {
-    const scrollTop = scrollContainer.property('scrollTop');
-    const hour = Math.floor(scrollTop/ 500)
-    updatePieChart(tempArr[hour], actArr[hour])
     
-});
+    // Initial dynamic pie charts (scrolly update)
+    updatePieChart(temperatureData, activityData);
+    updateScrollContent(temperatureData, activityData);
+    // NEW: Render overall static pie charts based on averages across the whole experiment
+    updateOverallPieChart(temperatureData, activityData);
+    
+    const scrollContainer = d3.select('#scroll-container');
+    scrollContainer.on('scroll', () => {
+        const scrollTop = scrollContainer.property('scrollTop');
+        // Dividing by 150 to calculate day index (adjust if needed)
+        const day = Math.floor(scrollTop / 150);
+        if(day >= 0 && day < tempArr.length) {
+            updatePieChart(tempArr[day], actArr[day]);
+        }
+    });
 });

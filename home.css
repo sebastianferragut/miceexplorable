@@ -1,48 +1,89 @@
 body {
   margin-inline: 3%;
 }
-/* Home page-specific styles */
-#piechart{
-  position: sticky;
-  grid-column: 2;
+
+/* Scrollytelling container: using a three-column grid.
+   Left: fixed 300px for the scroll box.
+   Center: auto-sized for the dynamic pie charts (centered on the page).
+   Right: fixed 300px empty to balance the layout. */
+#scrollytelling {
   display: grid;
+  grid-template-columns: 300px auto 300px;
+  column-gap: 20px;
+  margin: 0 auto;  /* Center the grid on the page */
+  align-items: start;
 }
+
+/* Scroll container remains fixed at 300px wide */
+#scroll-container {
+  width: 300px;
+  height: 80%;
+  overflow-y: scroll;
+  border: 5px solid #ccc;
+  margin-top: 80px;
+  margin-bottom: 50px;
+  border-radius: 15px;
+}
+
+/* Change items container to relative positioning so its content is confined within the scroll container */
+#items-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide spacer if it is no longer needed for spacing */
+#spacer {
+  display: none;
+}
+
+/* Dynamic pie chart container in the center grid column */
+#piechart {
+  margin: 0 auto;         /* Center the container within the grid cell */
+  max-width: 1000px;       /* Constrain to your desired maximum width */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Narrative text above the dynamic pie charts */
+#narrative_pies {
+  text-align: center;
+  width: 100%;
+  margin: 20px auto;
+}
+
+/* Overall static pie chart container */
+#overall-container {
+  margin: 50px auto;
+  max-width: 1000px;
+  text-align: center;
+}
+
+/* Container for overall pie charts */
+#overall-piechart {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* Pie chart subcontainers (for both dynamic and overall charts) */
 #temp-pie-chart,
-#activity-pie-chart {
+#activity-pie-chart,
+#overall-temp-pie-chart,
+#overall-activity-pie-chart {
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 20px auto;
 }
-#nav-advanced {
-  text-align: right;
-  margin: 20px;
-}
 
-
-#scrollytelling {
-  grid-template-columns: 1fr 11fr;
-  display: grid;
-  grid-template-columns: subgrid;
-}
-
-#scroll-container {
-  grid-column: 1;
-  position: relative;
-  width: 100%;
-  height: 80%;
-  overflow-y: scroll;
-  border: 5px solid #ccc;
-  margin-bottom: 50px;
-  margin-top: 80px;
-  border-radius: 15px;
-}
-
-.to-advanced {
-  position: static;
-  float: right;
-  top: 10px;
-  left: 10px;
+/* Navigation buttons */
+.to-advanced,
+.to-index {
   padding: 10px 20px;
   background-color: #a6a6a6;
   color: white;
@@ -50,49 +91,28 @@ body {
   border-radius: 5px;
   cursor: pointer;
 }
+
+.to-advanced {
+  float: right;
+  margin-top: 10px;
+}
+
 .to-advanced:hover {
   background-color: #3b54c4;
   transition: background-color 0.3s ease-in-out;
 }
 
 .to-index {
-  position: static;
   float: left;
-  top: 50px;
-  left: 10px;
-  padding: 10px 20px;
-  background-color: #a6a6a6;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  margin-top: 50px;
 }
+
 .to-index:hover {
   background-color: #3b54c4;
   transition: background-color 0.3s ease-in-out;
 }
 
-
-
-#spacer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: none; /* transparent */
-  pointer-events: none;
-}
-
-#items-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
+/* Styling for items within the scroll box */
 .item {
   height: 30px;
   padding-top: 10px;
@@ -105,7 +125,6 @@ dd {
   margin-bottom: 20px;
 }
 
-dt{
+dt {
   margin-bottom: 20px;
 }
-
