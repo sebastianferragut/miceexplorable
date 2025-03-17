@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css"> <!-- General styles -->
+  <link rel="icon" href="imgs/micefav.svg" type="image/svg+xml">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <title>Conclusion</title>
+</head>
+
+<body>
+  <h1><a href="home.html"><img src="imgs/micefav.svg" width="100" alt="Of Mice and Medicine" class="hover-image"></a>
+  Of Mice and Medicine</h1>
+  <h2>The Impact of Biological Sex on Body Temperature and Activity</h2>
+
+
+  <p style="max-width: 700px; text-align: center; margin: 0 auto;">
+    Through this study, we saw that biological sex significantly impacts various health measurements, and that data from different subjects can be highly variable. One key factor in these differences for mice is the estrus cycle, which introduces hormonal fluctuations that can affect physiology and behavior in females.
+  <br></br>
+  Historically, many biological studies have focused primarily on male subjects to avoid this variability; this rationale leads to gaps in our understanding of female biology and how different drugs, diseases, and disorders present in females.
+  <br></br>
+  Including female subjects in research is crucial for developing a comprehensive understanding of biology and effective medical treatments. Additionally, it allows for a more accurate representation of biological diversity, ensuring that health information and intervention are equitable across sexes.
+  <br></br>
+  <br></br>
+  <b>Click on the </b><a href="home.html" style="text-decoration: none;"><b style="background: linear-gradient(to right, blue, pink); background-clip: text; color: transparent;">mice</b></a><b> at the top to go back to the home page.</b>
+  </p>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const transitionElement = document.createElement("div");
+    transitionElement.classList.add("page-transition");
+
+    // Add image inside the transition div
+    const image = document.createElement("img");
+    image.src = "imgs/mice.svg"; // Replace with your image path
+    image.alt = "Loading...";
+    
+    transitionElement.appendChild(image);
+    document.body.appendChild(transitionElement);
+
+    setTimeout(() => {
+      transitionElement.classList.add("hidden");
+    }, 200); // Fade out faster
+
+    document.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const href = link.getAttribute("href");
+
+        transitionElement.classList.remove("hidden");
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 200);
+      });
+    });
+  });
+</script>
+</body>
+
+</html>

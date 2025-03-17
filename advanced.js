@@ -426,10 +426,10 @@ function updateChart() {
   const chartData = getChartData();
   const smoothedData = smoothData(chartData, SMOOTH_WINDOW);
 
-  // Updated color scale: male = "lightblue", estrus = "#d93d5f", non‑estrus = orangey-yellow "#ffae42"
+  // Updated color scale: male = "lightblue", estrus = "#d93d5f", non‑estrus = "lightpink" // orangey-yellow "#ffae42"
   const colorScale = d3.scaleOrdinal()
     .domain(["male", "estrus", "non-estrus"])
-    .range(["lightblue", "#d93d5f", "#ffae42"]);
+    .range(["lightblue", "#d93d5f", "lightpink"]);
   
   yScale.domain([globalYDomain[0]*0.98, globalYDomain[1]*1.02]);
   yAxis.transition().duration(250).call(d3.axisLeft(yScale));
@@ -470,6 +470,7 @@ function updateChart() {
         .attr("class", "mouse-line")
         .attr("clip-path", "url(#clip)")
         .attr("fill", "none")
+        .attr("stroke", d => colorScale(d.gender === "male" ? "male" : d.type))
         .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
         .attr("opacity", d => d.id.includes("avg") ? 0.7 : 0)
         .on("mouseover", showTooltip)
@@ -481,7 +482,7 @@ function updateChart() {
           .attr("d", d => lineGenerator(d.data))
           .attr("stroke", d => {
               if (d.gender === "male") return "lightblue";
-              return d.type === "estrus" ? "#d93d5f" : "#ffae42";
+              return d.type === "estrus" ? "#d93d5f" : "lightpink";
           })
           .attr("stroke-width", d => d.id.includes("avg") ? 3 : 1.5)
           .attr("opacity", 0.7);

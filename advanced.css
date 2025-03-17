@@ -171,7 +171,8 @@ button:hover {
 
 /* Updated non-estrus legend color: orangey-yellow */
 #nonEstrusCheckbox:checked + .legend-color {
-  background-color: #ffae42;
+  /* background-color: #ffae42; */
+  background-color: lightpink;
 }
 
 .legend-swatch {
