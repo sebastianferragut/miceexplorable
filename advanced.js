@@ -371,8 +371,8 @@ function updateResetButtonVisibility() {
 }
 
 function updateBackground() {
-  const greyStart = new Date(2023,0,1,12,0);
-  const greyEnd = new Date(2023,0,1,23,59);
+  const greyStart = new Date(2023,0,1,0,0);
+  const greyEnd = new Date(2023,0,1,12,0);
   const currentDomain = xScale.domain();
   const overlapStart = currentDomain[0] > greyStart ? currentDomain[0] : greyStart;
   const overlapEnd = currentDomain[1] < greyEnd ? currentDomain[1] : greyEnd;
