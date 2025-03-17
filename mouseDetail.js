@@ -16,6 +16,9 @@ const svg = d3.select("#detail-chart")
   .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
+// Global variable for the vertical line (added after animation ends)
+let verticalLine = null;
+
 // -----------------------
 // Define a clipPath so data to the left of the y–axis is hidden.
 const defs = svg.append("defs");
@@ -403,7 +406,7 @@ function updateChart(currentTime) {
         .style("top", (femaleY - 20) + "px");
     }
   } else {
-    // In phase 2, tooltips will be handled via the brush overlay's events.
+    // In phase 2, tooltips and the vertical line are handled via the overlay below.
   }
 }
 
@@ -434,6 +437,17 @@ function updateSummary(currentTime) {
   
   const minMaleDisplay = (minMale === null || minMale === undefined) ? (mode === "activity" ? "0" : "N/A") : minMale.toFixed(2) + unitLabel;
   const minFemaleDisplay = (minFemale === null || minFemale === undefined) ? (mode === "activity" ? "0" : "N/A") : minFemale.toFixed(2) + unitLabel;
+
+  let averageRow = "";
+  if (currentTime >= experimentEnd) {
+    const maleAvg = d3.mean(smoothedMaleGlobal, d => d.value);
+    const femaleAvg = d3.mean(femaleSegmentsGlobal.flatMap(segment => segment.data), d => d.value);
+    averageRow = `<tr>
+        <td>Average</td>
+        <td>${maleAvg ? maleAvg.toFixed(2) + unitLabel : "N/A"}</td>
+        <td>${femaleAvg ? femaleAvg.toFixed(2) + unitLabel : "N/A"}</td>
+      </tr>`;
+  }
   
   const tableHTML =
     `<table class="summary-table">
@@ -455,6 +469,7 @@ function updateSummary(currentTime) {
         <td>${minMaleDisplay}</td>
         <td>${minFemaleDisplay}</td>
       </tr>
+      ${averageRow}
     </table>`;
   
   d3.select("#dynamic-narrative").html(tableHTML);
@@ -716,19 +731,44 @@ function updateDimensions() {
   svg.select(".y.axis-label")
     .attr("x", -height / 2)
     .attr("y", -margin.left + 20);
+  // Update vertical line height if it exists.
+  if (verticalLine) {
+    verticalLine.attr("y2", height);
+  }
   updateChart(currentSimTime);
 }
 window.addEventListener("resize", updateDimensions);
 
 // -----------------------
-// Attach tooltip events to the brush overlay so that tooltips and brushing work together.
+// Attach tooltip events (and vertical line) for phase 2.
 function attachTooltipEvents() {
-  const brushOverlay = svg.select(".brush-group").select(".overlay");
-  if (!brushOverlay.empty()) {
-    // Use a separate event namespace so as not to override the brush’s own events.
-    brushOverlay
+  // Try to select the brush overlay.
+  let target = svg.select(".brush-group").select(".overlay");
+  // If not found, add a dedicated tooltip overlay.
+  if (target.empty()) {
+    target = gClip.append("rect")
+      .attr("class", "tooltip-overlay")
+      .attr("width", width)
+      .attr("height", height)
+      .style("fill", "transparent")
+      .style("pointer-events", "all");
+  }
+  // Create the vertical line if it doesn't exist.
+  if (!verticalLine) {
+    verticalLine = svg.append("line")
+      .attr("class", "vertical-line")
+      .attr("y1", 0)
+      .attr("y2", height)
+      .style("display", "none");
+  }
+  target
       .on("mousemove.tooltip", function(event) {
          const [x] = d3.pointer(event);
+         verticalLine
+            .attr("x1", x)
+            .attr("x2", x)
+            .style("display", "block")
+            .raise(); // ensure it appears on top
          const time = xScale.invert(x);
          const nearestMale = getNearestValue(smoothedMaleGlobal, time);
          const nearestFemale = getNearestValue(femaleSegmentsGlobal.flatMap(segment => segment.data), time);
@@ -753,8 +793,8 @@ function attachTooltipEvents() {
       .on("mouseout.tooltip", function(event) {
          d3.select("#tooltip-male").style("display", "none");
          d3.select("#tooltip-female").style("display", "none");
+         verticalLine.style("display", "none");
       });
-  }
 }
 
 // -----------------------

@@ -140,7 +140,6 @@ button:hover {
     transition: background-color 0.1s ease-in-out;
 }
 
-
 /* Home button changed to static and placed at the top right corner */
 .home-button {
     position: static;
@@ -160,7 +159,6 @@ button:hover {
 }
 
 /* Back button changed to static and placed at the top left corner */
-
 .back-button {
     position: static;
     display: block;
@@ -176,4 +174,11 @@ button:hover {
 .home-button:hover {
     background-color: #3b54c4;
     transition: background-color 0.3s ease-in-out;
+}
+
+/* New style for vertical line */
+.vertical-line {
+    stroke: black;
+    stroke-width: 2;
+    pointer-events: none;
 }
