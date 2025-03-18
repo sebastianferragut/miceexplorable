@@ -24,8 +24,6 @@ body {
   margin-bottom: 50px;
   border-radius: 15px;
   max-height: 300px;
-  margin-left: 150px;
-
 }
 
 /* Change items container to relative positioning so its content is confined within the scroll container */
