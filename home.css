@@ -23,6 +23,8 @@ body {
   margin-top: 80px;
   margin-bottom: 50px;
   border-radius: 15px;
+  max-height: 300px;
+
 }
 
 /* Change items container to relative positioning so its content is confined within the scroll container */
