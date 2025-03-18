@@ -4,6 +4,7 @@ html, body {
   padding: 0;
   max-height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Wrap the entire page content in a container that is scaled down */
