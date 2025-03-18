@@ -50,24 +50,24 @@
     <!-- Dynamic Pie Chart Container (updates when scrolling) -->
     <div id="piechart">
       <div id="temp-pie-chart"></div>
-      <!-- Narrative text for piecharts -->
-      <div id="narrative_pies">
-        <p>
-          We can see that overall, the temperature of female mice tends to be higher in comparison to male mice. Interestingly, the female temperatures rise during days <b>6, 10, and 14</b>.
-          There is also a slight discrepancy between the female and male activity distributions at higher ranges.<br>
-          <i>But why is this so?</i> <b>Click on a pie slice to learn more.</b>
-        </p>
-        <script>
-          document.getElementById('to-advanced').addEventListener('click', () => {
-            window.location.href = 'advanced.html';
-          });
-          document.getElementById('to-index').addEventListener('click', () => {
-            window.location.href = 'index.html';
-          });
-        </script>
-      </div>
       <div id="activity-pie-chart"></div>
     </div>
+  </div>
+
+  <div id="narrative_pies">
+    <p>
+      We can see that overall, the temperature of female mice tends to be higher in comparison to male mice. Interestingly, the female temperatures rise during days <b>6, 10, and 14</b>.
+      There is also a slight discrepancy between the female and male activity distributions at higher ranges.<br>
+      <i>But why is this so?</i> <b>Click on a pie slice to learn more.</b>
+    </p>
+    <script>
+      document.getElementById('to-advanced').addEventListener('click', () => {
+        window.location.href = 'advanced.html';
+      });
+      document.getElementById('to-index').addEventListener('click', () => {
+        window.location.href = 'index.html';
+      });
+    </script>
   </div>
 
   <script>

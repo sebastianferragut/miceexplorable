@@ -72,6 +72,10 @@ body {
   gap: 20px;
 }
 
+#overall-piechart p {
+  margin-top: 0 auto;
+}
+
 /* Pie chart subcontainers (for both dynamic and overall charts) */
 #temp-pie-chart,
 #activity-pie-chart,
@@ -80,7 +84,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px auto;
+  margin: 10px auto;
 }
 
 /* Navigation buttons */
