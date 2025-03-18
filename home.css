@@ -24,6 +24,7 @@ body {
   margin-bottom: 50px;
   border-radius: 15px;
   max-height: 300px;
+  margin-left: 150px;
 
 }
 
@@ -54,7 +55,7 @@ body {
 #narrative_pies {
   text-align: center;
   width: 100%;
-  margin: 20px auto;
+  margin-inline: 20px;
 }
 
 /* Overall static pie chart container */
