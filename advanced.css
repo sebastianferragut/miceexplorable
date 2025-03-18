@@ -148,6 +148,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  font-size: 16px;
   gap: 15px;
   flex-wrap: wrap;
   background: #fff;
@@ -168,6 +169,7 @@ button:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -213,7 +215,7 @@ button:hover {
   color: #fff;
   padding: 6px 10px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 14px;
   pointer-events: none;
   
 }
@@ -223,7 +225,7 @@ button:hover {
 }
 
 #subheader {
-  font-size: 15px;
+  font-size: 16px;
   color: #8b8686;
   margin-top: 10px;
 }
@@ -237,7 +239,7 @@ button:hover {
   color: #fff;
   padding: 6px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 14px;
   z-index: 10;
 }
 #tooltip.visible {

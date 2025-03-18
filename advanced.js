@@ -280,7 +280,7 @@ function initializeChart() {
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("fill", "#333")
-    .style("font-size", "18px");
+    .style("font-size", "20px");
     
   svg.append("text")
     .attr("class", "lightOffLabel")
@@ -288,14 +288,14 @@ function initializeChart() {
     .attr("y", 20)
     .attr("text-anchor", "middle")
     .attr("fill", "#333")
-    .style("font-size", "18px");
+    .style("font-size", "20px");
   
   svg.append("text")
     .attr("class", "x-axis-label")
     .attr("x", width/2)
     .attr("y", height + margin.bottom - 10)
     .attr("text-anchor", "middle")
-    .style("font-size", "18px")
+    .style("font-size", "20px")
     .style("fill", "#333")
     .text("Time of Day");
   
@@ -305,6 +305,7 @@ function initializeChart() {
     .attr("y", -margin.left + 15)
     .attr("x", -height/2)
     .style("text-anchor", "middle")
+    .style("font-size", "20px")
     .text(currentMode === "temperature" ? "Temperature (°C)" : "Activity Level");
   
   xAxis = svg.append("g")
@@ -332,6 +333,7 @@ function initializeChart() {
   lightLegend.append("text")
     .attr("x", 25)
     .attr("y", 15)
+    .style("font-size", "20px")
     .text("Light On");
     
   lightLegend.append("rect")
@@ -345,6 +347,7 @@ function initializeChart() {
   lightLegend.append("text")
     .attr("x", 25)
     .attr("y", 40)
+    .style("font-size", "20px")
     .text("Light Off");
   
   brush = d3.brushX()

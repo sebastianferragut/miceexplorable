@@ -163,7 +163,7 @@ function drawPieCharts(femaleBins, maleBins, dataType, divId) {
         .attr("x", 15)
         .attr("y", (d, i) => i * 20 +15 )
         .text(d => d)
-        .attr("font-size", "12px")
+        .attr("font-size", "16px")
         .attr("padding-block", "0px");
 }
 
